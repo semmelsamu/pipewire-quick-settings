@@ -21,22 +21,26 @@ pub fn parse_pw_clients(pw_dump: String) -> HashMap<i32, String> {
     for obj in array {
         let Value::Object(map) = obj else { continue };
 
-        let Some(Value::String(obj_type)) = map.get("type") else { continue };
+        // Check if it's a Node type
+        let Some(obj_type) = map.get("type").and_then(|v| v.as_str()) else { continue };
         if obj_type != "PipeWire:Interface:Node" {
             continue;
         }
 
-        // Nasty stuff.
-        // Try to get the ID from `map`. Convert it to a JSON number. Continue if it fails.
-        let Some(Value::Number(id)) = map.get("id") else { continue };
-        // Convert the JSON number to an i32 (|x| x as i32 is a closure function). Continue if it fails.
-        let Some(id_i32) = id.as_i64().map(|x| x as i32) else { continue };
+        // Get ID
+        let Some(id) = map.get("id").and_then(|v| v.as_i64()) else { continue };
+        let id_i32 = id as i32;
 
-        let Some(Value::Object(info)) = map.get("info") else { continue };
-        let Some(Value::Object(props)) = info.get("props") else { continue };
-        let Some(Value::String(app_name)) = props.get("application.name") else { continue };
+        // Get application name using chained navigation
+        let Some(app_name) = map
+            .get("info")
+            .and_then(|v| v.as_object())
+            .and_then(|obj| obj.get("props"))
+            .and_then(|v| v.as_object())
+            .and_then(|obj| obj.get("application.name"))
+            .and_then(|v| v.as_str()) else { continue };
 
-        clients.insert(id_i32, app_name.clone());
+        clients.insert(id_i32, app_name.to_string());
     }
     
     clients
@@ -53,31 +57,44 @@ pub fn parse_pw_sinks(pw_dump: String) -> HashMap<i32, String> {
     for obj in array {
         let Value::Object(map) = obj else { continue };
         
-        let Some(Value::String(obj_type)) = map.get("type") else { continue };
+        // Check if it's a Node type
+        let Some(obj_type) = map.get("type").and_then(|v| v.as_str()) else { continue };
         if obj_type != "PipeWire:Interface:Node" {
             continue;
         } 
         
-        let Some(Value::Number(id)) = map.get("id") else { continue };
-        let Some(id_i32) = id.as_i64().map(|x| x as i32) else { continue };
+        // Get ID
+        let Some(id) = map.get("id").and_then(|v| v.as_i64()) else { continue };
+        let id_i32 = id as i32;
         
-        let Some(Value::Object(info)) = map.get("info") else { continue };
-        let Some(Value::Object(props)) = info.get("props") else { continue };
-        let Some(Value::String(media_class)) = props.get("media.class") else { continue };
+        // Get media class using chained navigation
+        let Some(media_class) = map
+            .get("info")
+            .and_then(|v| v.as_object())
+            .and_then(|obj| obj.get("props"))
+            .and_then(|v| v.as_object())
+            .and_then(|obj| obj.get("media.class"))
+            .and_then(|v| v.as_str()) else { continue };
         
         if media_class != "Audio/Sink" {
             continue;
         }
         
-        let description = if let Some(Value::String(desc)) = props.get("node.description") {
-            desc.clone()
-        } else if let Some(Value::String(nick)) = props.get("node.nick") {
-            nick.clone()
-        } else {
-            "Unknown Sink".to_string()
-        };
+        // Get description with fallback logic
+        let Some(props) = map
+            .get("info")
+            .and_then(|v| v.as_object())
+            .and_then(|obj| obj.get("props"))
+            .and_then(|v| v.as_object()) else { continue };
+            
+        let description = props
+            .get("node.description")
+            .and_then(|v| v.as_str())
+            .or_else(|| props.get("node.nick")
+            .and_then(|v| v.as_str()))
+            .unwrap_or("Unknown Sink");
         
-        sinks.insert(id_i32, description);
+        sinks.insert(id_i32, description.to_string());
     }
     
     sinks
