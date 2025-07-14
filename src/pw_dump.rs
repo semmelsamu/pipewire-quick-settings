@@ -21,17 +21,14 @@ pub fn parse_pw_clients(pw_dump: String) -> HashMap<i32, String> {
     for obj in array {
         let Value::Object(map) = obj else { continue };
 
-        // Check if it's a Node type
         let Some(obj_type) = map.get("type").and_then(|v| v.as_str()) else { continue };
         if obj_type != "PipeWire:Interface:Node" {
             continue;
         }
 
-        // Get ID
         let Some(id) = map.get("id").and_then(|v| v.as_i64()) else { continue };
         let id_i32 = id as i32;
 
-        // Get application name using chained navigation
         let Some(app_name) = map
             .get("info")
             .and_then(|v| v.as_object())
@@ -57,17 +54,14 @@ pub fn parse_pw_sinks(pw_dump: String) -> HashMap<i32, String> {
     for obj in array {
         let Value::Object(map) = obj else { continue };
         
-        // Check if it's a Node type
         let Some(obj_type) = map.get("type").and_then(|v| v.as_str()) else { continue };
         if obj_type != "PipeWire:Interface:Node" {
             continue;
         } 
         
-        // Get ID
         let Some(id) = map.get("id").and_then(|v| v.as_i64()) else { continue };
         let id_i32 = id as i32;
         
-        // Get media class using chained navigation
         let Some(media_class) = map
             .get("info")
             .and_then(|v| v.as_object())
@@ -81,22 +75,16 @@ pub fn parse_pw_sinks(pw_dump: String) -> HashMap<i32, String> {
         }
         
         // Get description with fallback logic
-        let Some(props) = map
+        let Some(description) = map
             .get("info")
             .and_then(|v| v.as_object())
             .and_then(|obj| obj.get("props"))
-            .and_then(|v| v.as_object()) else { continue };
-            
-        let description = props
-            .get("node.description")
-            .and_then(|v| v.as_str())
-            .or_else(|| props.get("node.nick")
-            .and_then(|v| v.as_str()))
-            .unwrap_or("Unknown Sink");
+            .and_then(|v| v.as_object())
+            .and_then(|obj| obj.get("node.description"))
+            .and_then(|v| v.as_str()) else { continue };
         
         sinks.insert(id_i32, description.to_string());
     }
     
     sinks
 }
-
