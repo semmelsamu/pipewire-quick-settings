@@ -94,8 +94,11 @@ def change_volume() -> None:
         raise RuntimeError(f"Selected sink {chosen_sink} not found") from exc
 
     volume = sink.get("volume")
+    volume_linear = sink.get("volume_linear")
     if isinstance(volume, (int, float)):
-        print(f"Current volume: {float(volume):.2f}")
+        print(f"Current volume: {float(volume):.2f} (~{float(volume) * 100:.0f}%)")
+        if isinstance(volume_linear, (int, float)):
+            print(f"Raw PipeWire volume: {float(volume_linear):.3f}")
     elif volume is not None:
         print(f"Current volume: {volume}")
     else:

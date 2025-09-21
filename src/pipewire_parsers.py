@@ -4,6 +4,18 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
 
+def _coerce_float(value: Any) -> Optional[float]:
+    """Best-effort conversion of PipeWire values to floats."""
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            return None
+    return None
+
+
 def _get_default_sink_name(dump: List[Dict[str, Any]]) -> Optional[str]:
     """Return the default audio sink name from PipeWire metadata."""
     for obj in dump:
@@ -37,17 +49,26 @@ def parse_sinks(dump: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                 volume_info = item
                 break
 
-        global_volume: Optional[float] = None
+        linear_volume: Optional[float] = None
         if volume_info is not None:
             channel_volumes = volume_info.get("channelVolumes")
             if isinstance(channel_volumes, list):
-                numeric_channels = [float(v) for v in channel_volumes if isinstance(v, (int, float))]
+                numeric_channels = [
+                    coerced
+                    for value in channel_volumes
+                    for coerced in (_coerce_float(value),)
+                    if coerced is not None
+                ]
                 if numeric_channels:
-                    global_volume = sum(numeric_channels) / len(numeric_channels)
-            if global_volume is None:
-                volume_value = volume_info.get("volume")
-                if isinstance(volume_value, (int, float)):
-                    global_volume = float(volume_value)
+                    linear_volume = sum(numeric_channels) / len(numeric_channels)
+            if linear_volume is None:
+                volume_value = _coerce_float(volume_info.get("volume"))
+                if volume_value is not None:
+                    linear_volume = volume_value
+
+        user_volume: Optional[float] = None
+        if linear_volume is not None and linear_volume >= 0:
+            user_volume = 0.0 if linear_volume == 0 else linear_volume ** (1 / 3)
 
         sinks.append(
             {
@@ -56,7 +77,8 @@ def parse_sinks(dump: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                 "description": props.get("node.description") or props.get("node.name"),
                 "state": obj.get("info", {}).get("state", "unknown"),
                 "device.id": props.get("device.id"),
-                "volume": global_volume,
+                "volume": user_volume,
+                "volume_linear": linear_volume,
                 "mute": None if volume_info is None else volume_info.get("mute"),
             }
         )
