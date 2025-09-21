@@ -1,33 +1,40 @@
 """Command-line interface for PipeWire quick settings."""
 from __future__ import annotations
 
+import builtins
 from typing import Any, Dict, List
 
 from .display import table
-from pipewire_parsers import parse_card, parse_profiles, parse_sinks
-from pw_client import pw_dump, set_default_sink, set_profile
-from .input import choose_sink, choose_profile
+from .cli import change_sink, change_card
+from .input import select_option
 
-def run_cli() -> None:
-    dump = pw_dump()
+def cli():
+    options = [
+        { "id": 0, "description": "Exit" },
+        { "id": 1, "description": "Set default sink" },
+        { "id": 2, "description": "Set card for current sink" },
+    ]
+    
+    table("Pipewire Quick Settings CLI", options)
+    
+    option = select_option("Select option")
+    
+    match option:
+        case 0:
+            return False
+        
+        case 1: 
+            change_sink()
+            
+        case 2:
+            change_card()
+        
+        case _:
+            print("Invalid option")
+            
+    return True
+    
 
-    sinks = parse_sinks(dump)
-    chosen_sink = choose_sink(sinks)
-    set_default_sink(chosen_sink)
-
-    try:
-        sink = next(s for s in sinks if s["id"] == chosen_sink)
-    except StopIteration as exc:
-        raise RuntimeError(f"Selected sink {chosen_sink} not found") from exc
-
-    card_id = sink.get("device.id")
-
-    card = parse_card(dump, card_id)
-    if card is None:
-        raise RuntimeError(f"No card found for id {card_id}")
-
-    table("Card", [card], ["id", "description", "profile"])
-
-    profiles = parse_profiles(card)
-    chosen_profile = choose_profile(card_id, profiles)
-    set_profile(card_id, chosen_profile)
+def cli_loop() -> None:
+    while cli():
+        continue

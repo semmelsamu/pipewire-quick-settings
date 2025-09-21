@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 from typing import Sequence
 
-from cli import run_cli
+from cli import cli_loop
 
 
 def run_gui() -> None:
@@ -29,7 +29,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     args = parser.parse_args(argv)
 
     if args.mode == "cli":
-        run_cli()
+        cli_loop()
     else:
         run_gui()
 
