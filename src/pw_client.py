@@ -29,3 +29,12 @@ def set_profile(card_id: int, profile_index: int) -> None:
 def set_volume(sink_id: int, volume: str) -> None:
     """Set the volume for a sink via ``wpctl``."""
     subprocess.run([WPCTL_CMD, "set-volume", str(sink_id), volume], check=False)
+
+
+def set_mute(sink_id: int, mute: bool | str) -> None:
+    """Mute/unmute a sink via ``wpctl``."""
+    if isinstance(mute, str):
+        state = mute
+    else:
+        state = "1" if mute else "0"
+    subprocess.run([WPCTL_CMD, "set-mute", str(sink_id), state], check=False)

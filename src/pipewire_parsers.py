@@ -50,6 +50,7 @@ def parse_sinks(dump: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                 break
 
         linear_volume: Optional[float] = None
+        mute_value: Optional[bool] = None
         if volume_info is not None:
             channel_volumes = volume_info.get("channelVolumes")
             if isinstance(channel_volumes, list):
@@ -66,6 +67,16 @@ def parse_sinks(dump: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                 if volume_value is not None:
                     linear_volume = volume_value
 
+            mute_raw = volume_info.get("mute")
+            if isinstance(mute_raw, bool):
+                mute_value = mute_raw
+            elif isinstance(mute_raw, str):
+                mute_value = mute_raw.lower() in {"1", "true", "yes", "on"}
+            else:
+                coerced = _coerce_float(mute_raw)
+                if coerced is not None:
+                    mute_value = coerced != 0.0
+
         user_volume: Optional[float] = None
         if linear_volume is not None and linear_volume >= 0:
             user_volume = 0.0 if linear_volume == 0 else linear_volume ** (1 / 3)
@@ -79,7 +90,7 @@ def parse_sinks(dump: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                 "device.id": props.get("device.id"),
                 "volume": user_volume,
                 "volume_linear": linear_volume,
-                "mute": None if volume_info is None else volume_info.get("mute"),
+                "mute": mute_value,
             }
         )
     return sinks

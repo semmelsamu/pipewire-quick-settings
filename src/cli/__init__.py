@@ -5,7 +5,7 @@ import builtins
 from typing import Any, Dict, List
 
 from .util import table, select_option
-from .cli import change_sink, change_profile, change_volume
+from .cli import change_sink, change_profile, change_volume, change_mute
 
 
 def cli():
@@ -14,6 +14,7 @@ def cli():
         { "id": 1, "description": "Set default sink" },
         { "id": 2, "description": "Change sink profile" },
         { "id": 4, "description": "Set sink volume" },
+        { "id": 5, "description": "Mute / unmute sink" },
     ]
     
     table("Pipewire Quick Settings CLI", options)
@@ -32,6 +33,9 @@ def cli():
 
         case 4:
             change_volume()
+
+        case 5:
+            change_mute()
         
         case _:
             print("Invalid option")

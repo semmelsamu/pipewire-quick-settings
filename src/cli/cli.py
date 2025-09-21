@@ -1,6 +1,6 @@
 """CLI flows."""
 
-from pw_client import pw_dump, set_default_sink, set_profile, set_volume
+from pw_client import pw_dump, set_default_sink, set_profile, set_volume, set_mute
 from .util import table, select_option
 from pipewire_parsers import (
     get_current_profile,
@@ -130,3 +130,45 @@ def change_volume() -> None:
         volume_arg = f"{volume_value}"
 
     set_volume(chosen_sink, volume_arg)
+
+
+def change_mute() -> None:
+    dump = pw_dump()
+    sinks = parse_sinks(dump)
+    current_sink = get_current_sink(dump)
+
+    if current_sink:
+        print(
+            f"Current default sink: {current_sink.get('description')} (id {current_sink.get('id')})"
+        )
+    else:
+        print("Current default sink: unknown")
+
+    table("Output Sinks", sinks)
+    chosen_sink = select_option("Select sink")
+
+    try:
+        sink = next(s for s in sinks if s["id"] == chosen_sink)
+    except StopIteration as exc:
+        raise RuntimeError(f"Selected sink {chosen_sink} not found") from exc
+
+    mute_state = sink.get("mute")
+    if mute_state is None:
+        print("Current mute state: unknown")
+    else:
+        print(f"Current mute state: {'muted' if mute_state else 'unmuted'}")
+
+    choice = input("Enter mute state (mute/unmute/toggle) > ").strip().lower()
+
+    if not choice:
+        print("Mute state unchanged: no value entered")
+        return
+
+    if choice in {"mute", "m", "on", "yes", "1"}:
+        set_mute(chosen_sink, True)
+    elif choice in {"unmute", "u", "off", "no", "0"}:
+        set_mute(chosen_sink, False)
+    elif choice in {"toggle", "t"}:
+        set_mute(chosen_sink, "toggle")
+    else:
+        raise RuntimeError(f"Unrecognized mute option '{choice}'")
