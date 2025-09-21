@@ -84,10 +84,14 @@ def main():
     cols_stream = ["node.id", "application.name", "application.process.binary", "node.name", "node.description", "media.class", "client.id", "state"]
     cols_devnode = ["node.id", "node.name", "node.description", "media.class", "state"]
 
-    print_section("Programs outputting audio (Stream/Output/Audio)", stream_out, cols_stream)
+    # print_section("Programs outputting audio (Stream/Output/Audio)", stream_out, cols_stream)
     print_section("Playback devices (Audio/Sink nodes)", sinks, cols_devnode)
-    print_section("Programs capturing audio (Stream/Input/Audio)", stream_in, cols_stream)
-    print_section("Capture devices (Audio/Source nodes)", sources, cols_devnode)
+    # print_section("Programs capturing audio (Stream/Input/Audio)", stream_in, cols_stream)
+    # print_section("Capture devices (Audio/Source nodes)", sources, cols_devnode)
+    
+    new_output = input("Set output: >")
+    
+    subprocess.run(f"wpctl set-default {new_output}", shell=True)
 
 if __name__ == "__main__":
     main()
