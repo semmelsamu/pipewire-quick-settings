@@ -29,6 +29,26 @@ def parse_sinks(dump: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         props = obj.get("info", {}).get("props", {})
         if not props.get("media.class", "").startswith("Audio/Sink"):
             continue
+        params = obj.get("info", {}).get("params", {})
+        props_params = params.get("Props", [])
+        volume_info: Optional[Dict[str, Any]] = None
+        for item in props_params:
+            if isinstance(item, dict) and "volume" in item:
+                volume_info = item
+                break
+
+        global_volume: Optional[float] = None
+        if volume_info is not None:
+            channel_volumes = volume_info.get("channelVolumes")
+            if isinstance(channel_volumes, list):
+                numeric_channels = [float(v) for v in channel_volumes if isinstance(v, (int, float))]
+                if numeric_channels:
+                    global_volume = sum(numeric_channels) / len(numeric_channels)
+            if global_volume is None:
+                volume_value = volume_info.get("volume")
+                if isinstance(volume_value, (int, float)):
+                    global_volume = float(volume_value)
+
         sinks.append(
             {
                 "id": obj["id"],
@@ -36,6 +56,8 @@ def parse_sinks(dump: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                 "description": props.get("node.description") or props.get("node.name"),
                 "state": obj.get("info", {}).get("state", "unknown"),
                 "device.id": props.get("device.id"),
+                "volume": global_volume,
+                "mute": None if volume_info is None else volume_info.get("mute"),
             }
         )
     return sinks

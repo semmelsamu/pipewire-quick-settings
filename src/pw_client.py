@@ -24,3 +24,8 @@ def set_default_sink(sink_id: int) -> None:
 def set_profile(card_id: int, profile_index: int) -> None:
     """Set the profile for a specific card via ``wpctl``."""
     subprocess.run([WPCTL_CMD, "set-profile", str(card_id), str(profile_index)], check=False)
+
+
+def set_volume(sink_id: int, volume: str) -> None:
+    """Set the volume for a sink via ``wpctl``."""
+    subprocess.run([WPCTL_CMD, "set-volume", str(sink_id), volume], check=False)
