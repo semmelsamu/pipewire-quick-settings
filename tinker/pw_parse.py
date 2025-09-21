@@ -73,18 +73,16 @@ def main():
     
     table("Output Sinks", sinks, ["id", "description", "state"])
     
-    return
-
-    print_section("Playback devices (Audio/Sink nodes)", sinks, ["node.id", "node.description", "state"])
+    chosen_sink = int(input("Select Sink > "))
     
-    new_output = int(input("Set output: >"))
+    ports = parse_ports(dump, chosen_sink)
     
-    show_sink_ports(find_sink(sinks, new_output))
+    table(f"Sink Ports", ports, ["id", "name", "alias", "group"])
     
-    new_port = int(input("\nSet port index: > "))
+    chosen_port = int(input("Select Port > "))
     
-    subprocess.run(f"wpctl set-default {new_output}", shell=True)
-    subprocess.run(f"wpctl set-profile {new_output} {new_port}", shell=True)
+    subprocess.run(f"wpctl set-default {chosen_sink}", shell=True)
+    subprocess.run(f"wpctl set-profile {chosen_sink} {chosen_port}", shell=True)
 
 if __name__ == "__main__":
     main()
