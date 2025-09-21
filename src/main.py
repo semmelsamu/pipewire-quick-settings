@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 from typing import Sequence
 
-from ui.cli import run_cli
+from cli import run_cli
 
 
 def run_gui() -> None:
