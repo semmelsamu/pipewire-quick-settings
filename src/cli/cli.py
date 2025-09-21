@@ -15,9 +15,12 @@ def change_sink() -> None:
     set_default_sink(chosen_sink)
 
 
-def change_card() -> None:
+def change_profile() -> None:
     dump = pw_dump()
     sinks = parse_sinks(dump)
+    
+    table("Output Sinks", sinks)
+    chosen_sink = select_option("Select sink")
     
     try:
         sink = next(s for s in sinks if s["id"] == chosen_sink)
@@ -27,14 +30,13 @@ def change_card() -> None:
     card_id = sink.get("device.id")
 
     card = parse_card(dump, card_id)
+    
     if card is None:
         raise RuntimeError(f"No card found for id {card_id}")
 
-    table("Card", [card])
-
     profiles = parse_profiles(card)
-    table(f"Profiles for Card {card_id}", profiles)
     
+    table(f"Profiles for Card {card_id}", profiles)
     chosen_profile = select_option("Select profile")
     
     set_profile(card_id, chosen_profile)

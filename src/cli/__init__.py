@@ -5,14 +5,14 @@ import builtins
 from typing import Any, Dict, List
 
 from .util import table, select_option
-from .cli import change_sink, change_card
+from .cli import change_sink, change_profile
 
 
 def cli():
     options = [
         { "id": 0, "description": "Exit" },
         { "id": 1, "description": "Set default sink" },
-        { "id": 2, "description": "Set card for current sink" },
+        { "id": 2, "description": "Change sink profile" },
     ]
     
     table("Pipewire Quick Settings CLI", options)
@@ -27,7 +27,7 @@ def cli():
             change_sink()
             
         case 2:
-            change_card()
+            change_profile()
         
         case _:
             print("Invalid option")
