@@ -7,6 +7,7 @@ from typing import Any, Dict, List
 from .util import table, select_option
 from .cli import change_sink, change_card
 
+
 def cli():
     options = [
         { "id": 0, "description": "Exit" },

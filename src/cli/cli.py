@@ -4,6 +4,7 @@ from pw_client import pw_dump, set_default_sink, set_profile
 from .util import table, select_option
 from pipewire_parsers import parse_card, parse_profiles, parse_sinks
 
+
 def change_sink() -> None:
     dump = pw_dump()
     sinks = parse_sinks(dump)
@@ -12,6 +13,7 @@ def change_sink() -> None:
     chosen_sink = select_option("Select sink")
     
     set_default_sink(chosen_sink)
+
 
 def change_card() -> None:
     dump = pw_dump()
