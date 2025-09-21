@@ -6,17 +6,7 @@ from typing import Any, Dict, List
 from .display import table
 from pipewire_parsers import parse_card, parse_profiles, parse_sinks
 from pw_client import pw_dump, set_default_sink, set_profile
-
-
-def choose_sink(sinks: List[Dict[str, Any]]) -> int:
-    table("Output Sinks", sinks, ["id", "description", "state"])
-    return int(input("Select Sink > ").strip())
-
-
-def choose_profile(card_id: int, profiles: List[Dict[str, Any]]) -> int:
-    table(f"Profiles for Card {card_id}", profiles, ["index", "name", "description", "available"])
-    return int(input("Select Profile Index > ").strip())
-
+from .input import choose_sink, choose_profile
 
 def run_cli() -> None:
     dump = pw_dump()
