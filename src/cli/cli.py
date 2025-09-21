@@ -1,14 +1,16 @@
 """CLI flows."""
 
 from pw_client import pw_dump, set_default_sink, set_profile
-from .display import table
-from .input import choose_sink
+from .util import table, select_option
 from pipewire_parsers import parse_card, parse_profiles, parse_sinks
 
 def change_sink() -> None:
     dump = pw_dump()
     sinks = parse_sinks(dump)
-    chosen_sink = choose_sink(sinks)
+
+    table("Output Sinks", sinks)
+    chosen_sink = select_option("Select sink")
+    
     set_default_sink(chosen_sink)
 
 def change_card() -> None:
@@ -29,5 +31,8 @@ def change_card() -> None:
     table("Card", [card])
 
     profiles = parse_profiles(card)
-    chosen_profile = choose_profile(card_id, profiles)
+    table(f"Profiles for Card {card_id}", profiles)
+    
+    chosen_profile = select_option("Select profile")
+    
     set_profile(card_id, chosen_profile)

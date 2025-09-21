@@ -1,6 +1,8 @@
-"""Helpers for user-facing table output."""
+"""Helpers for user I/O."""
 from typing import Any, Dict, List
 
+def select_option(text: str):
+    return int(input(text + " > ").strip())
 
 def table(title: str, rows: List[Dict[str, Any]]) -> None:
     """Render a table covering all keys present in the provided rows."""

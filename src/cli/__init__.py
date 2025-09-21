@@ -4,9 +4,8 @@ from __future__ import annotations
 import builtins
 from typing import Any, Dict, List
 
-from .display import table
+from .util import table, select_option
 from .cli import change_sink, change_card
-from .input import select_option
 
 def cli():
     options = [
