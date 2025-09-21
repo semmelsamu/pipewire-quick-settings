@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
 import json, subprocess, sys
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 # ------------------------------------------------------------------------------
 # Utilities
 # ------------------------------------------------------------------------------
 
-def print_section(title: str, rows: List[Dict[str, Any]], cols: List[str]):
+def table(title: str, rows: List[Dict[str, Any]], cols: List[str]):
     print(f"\n=== {title} ({len(rows)}) ===")
     if not rows:
         return
@@ -18,14 +18,6 @@ def print_section(title: str, rows: List[Dict[str, Any]], cols: List[str]):
     for r in rows:
         print(" | ".join(str(r.get(c, "")).ljust(widths[c]) for c in cols))
 
-def get(d: Dict[str, Any], *path: str, default=None):
-    cur = d
-    for p in path:
-        if not isinstance(cur, dict) or p not in cur:
-            return default
-        cur = cur[p]
-    return cur
-
 # ------------------------------------------------------------------------------
 # Parsing logic
 # ------------------------------------------------------------------------------
@@ -33,62 +25,66 @@ def get(d: Dict[str, Any], *path: str, default=None):
 def pw_dump():
     proc = subprocess.run(["pw-dump"], capture_output=True, text=True, check=True)
     return json.loads(proc.stdout)
+    
 
-def collect(items: List[Dict[str, Any]]):
-    nodes = [o for o in items if o.get("type") == "PipeWire:Interface:Node"]
-    clients = {o.get("id"): o for o in items if o.get("type") == "PipeWire:Interface:Client"}
-
-    def node_row(n: Dict[str, Any]) -> Dict[str, Any]:
-        props = get(n, "info", "props", default={}) or {}
-        client_id = props.get("client.id")
-        client = clients.get(client_id, {})
-        cprops = get(client, "info", "props", default={}) or {}
-        return {
-            "node.id": n.get("id"),
-            "media.class": props.get("media.class"),
-            "node.name": props.get("node.name"),
-            "node.description": props.get("node.description") or props.get("node.nick"),
-            "application.name": props.get("application.name") or cprops.get("application.name"),
-            "application.process.binary": props.get("application.process.binary") or cprops.get("application.process.binary"),
-            "client.id": client_id,
-            "state": get(n, "info", "state"),
-        }
-
-    stream_out = []
-    stream_in = []
+def parse_sinks(dump):
+    """
+    Return list of audio sink nodes with id, description, and state.
+    """
     sinks = []
-    sources = []
+    for obj in dump:
+        if obj.get("type") == "PipeWire:Interface:Node":
+            props = obj.get("info", {}).get("props", {})
+            media_class = props.get("media.class", "")
+            if media_class.startswith("Audio/Sink"):
+                sinks.append({
+                    "id": obj["id"],
+                    "description": props.get("node.description") or props.get("node.name"),
+                    "state": obj.get("info", {}).get("state", "unknown")
+                })
+    return sinks
 
-    for n in nodes:
-        media_class = get(n, "info", "props", "media.class")
-        if not isinstance(media_class, str):
-            continue
-        row = node_row(n)
-        if media_class.startswith("Stream/Output/Audio"):
-            stream_out.append(row)
-        if media_class.startswith("Stream/Input/Audio"):
-            stream_in.append(row)
-        if media_class.startswith("Audio/Sink"):
-            sinks.append(row)
-        if media_class.startswith("Audio/Source"):
-            sources.append(row)
-
-    return stream_out, sinks, stream_in, sources
+def parse_ports(dump, sink_id):
+    """
+    Return list of output ports for a given sink id.
+    """
+    ports = []
+    for obj in dump:
+        if obj.get("type") == "PipeWire:Interface:Port":
+            info = obj.get("info", {})
+            props = info.get("props", {})
+            if props.get("node.id") == sink_id and info.get("direction") == "output":
+                ports.append({
+                    "id": obj["id"],
+                    "name": props.get("port.name"),
+                    "alias": props.get("port.alias"),
+                    "group": props.get("port.group"),
+                })
+    return ports
 
 # ------------------------------------------------------------------------------
 # Main Script
 # ------------------------------------------------------------------------------
 
 def main():
-    items = pw_dump()
+    dump = pw_dump()
     
-    stream_out, sinks, stream_in, sources = collect(items)
+    sinks = parse_sinks(dump)
+    
+    table("Output Sinks", sinks, ["id", "description", "state"])
+    
+    return
 
     print_section("Playback devices (Audio/Sink nodes)", sinks, ["node.id", "node.description", "state"])
     
-    new_output = input("Set output: >")
+    new_output = int(input("Set output: >"))
+    
+    show_sink_ports(find_sink(sinks, new_output))
+    
+    new_port = int(input("\nSet port index: > "))
     
     subprocess.run(f"wpctl set-default {new_output}", shell=True)
+    subprocess.run(f"wpctl set-profile {new_output} {new_port}", shell=True)
 
 if __name__ == "__main__":
     main()
