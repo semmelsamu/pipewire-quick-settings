@@ -29,38 +29,54 @@ def pw_dump():
 
 def parse_sinks(dump):
     """
-    Return list of audio sink nodes with id, description, and state.
+    Gibt Sinks (Nodes mit Audio/Sink) zurück.
     """
     sinks = []
     for obj in dump:
         if obj.get("type") == "PipeWire:Interface:Node":
             props = obj.get("info", {}).get("props", {})
-            media_class = props.get("media.class", "")
-            if media_class.startswith("Audio/Sink"):
+            if props.get("media.class", "").startswith("Audio/Sink"):
                 sinks.append({
                     "id": obj["id"],
                     "description": props.get("node.description") or props.get("node.name"),
-                    "state": obj.get("info", {}).get("state", "unknown")
+                    "state": obj.get("info", {}).get("state", "unknown"),
+                    "device.id": props.get("device.id"),   # ← Verknüpfung zur Card
                 })
     return sinks
 
-def parse_ports(dump, sink_id):
+def parse_card(dump, card_id: int):
     """
-    Return list of output ports for a given sink id.
+    Sucht die Card (Device) zu einer ID.
     """
-    ports = []
     for obj in dump:
-        if obj.get("type") == "PipeWire:Interface:Port":
-            info = obj.get("info", {})
-            props = info.get("props", {})
-            if props.get("node.id") == sink_id and info.get("direction") == "output":
-                ports.append({
-                    "id": obj["id"],
-                    "name": props.get("port.name"),
-                    "alias": props.get("port.alias"),
-                    "group": props.get("port.group"),
-                })
-    return ports
+        if obj.get("id") == card_id and obj.get("type") == "PipeWire:Interface:Device":
+            props = obj.get("info", {}).get("props", {})
+            params = obj.get("info", {}).get("params", {})
+            active_profile = None
+            if params.get("Profile"):
+                active_profile = params["Profile"][0].get("description") or params["Profile"][0].get("name")
+            return {
+                "id": obj["id"],
+                "description": props.get("device.description") or props.get("device.nick"),
+                "profile": active_profile or "unknown",
+                "params": params,
+            }
+    return None
+
+def parse_profiles(card):
+    """
+    Profile aus einem Card-Objekt extrahieren.
+    """
+    profiles = []
+    for p in card.get("params", {}).get("EnumProfile", []):
+        profiles.append({
+            "index": p.get("index"),
+            "name": p.get("name"),
+            "description": p.get("description"),
+            "available": p.get("available"),
+        })
+    return profiles
+
 
 # ------------------------------------------------------------------------------
 # Main Script
@@ -68,21 +84,26 @@ def parse_ports(dump, sink_id):
 
 def main():
     dump = pw_dump()
-    
+
     sinks = parse_sinks(dump)
-    
     table("Output Sinks", sinks, ["id", "description", "state"])
+    chosen_sink = int(input("Select Sink > ").strip())
     
-    chosen_sink = int(input("Select Sink > "))
+    subprocess.run(["wpctl", "set-default", str(chosen_sink)], check=False)
+
+    sink = next(s for s in sinks if s["id"] == chosen_sink)
+    card_id = sink.get("device.id")
     
-    ports = parse_ports(dump, chosen_sink)
+    card = parse_card(dump, card_id)
+    profiles = parse_profiles(card)
     
-    table(f"Sink Ports", ports, ["id", "name", "alias", "group"])
+    table("Card", [card], ["id", "description", "profile"])
     
-    chosen_port = int(input("Select Port > "))
+    table(f"Profiles for Card {card_id}", profiles, ["index", "name", "description", "available"])
+    chosen_profile = int(input("Select Profile Index > ").strip())
     
-    subprocess.run(f"wpctl set-default {chosen_sink}", shell=True)
-    subprocess.run(f"wpctl set-profile {chosen_sink} {chosen_port}", shell=True)
+    subprocess.run(["wpctl", "set-profile", str(card_id), str(chosen_profile)], check=False)
+
 
 if __name__ == "__main__":
     main()
