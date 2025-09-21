@@ -6,11 +6,7 @@ import argparse
 from typing import Sequence
 
 from cli import cli_loop
-
-
-def run_gui() -> None:
-    """Placeholder GUI entry point."""
-    raise NotImplementedError("GUI mode is not implemented yet")
+from gui import run_gui
 
 
 def build_parser() -> argparse.ArgumentParser:
