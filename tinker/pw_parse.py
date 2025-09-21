@@ -30,6 +30,10 @@ def get(d: Dict[str, Any], *path: str, default=None):
 # Parsing logic
 # ------------------------------------------------------------------------------
 
+def pw_dump():
+    proc = subprocess.run(["pw-dump"], capture_output=True, text=True, check=True)
+    return json.loads(proc.stdout)
+
 def collect(items: List[Dict[str, Any]]):
     nodes = [o for o in items if o.get("type") == "PipeWire:Interface:Node"]
     clients = {o.get("id"): o for o in items if o.get("type") == "PipeWire:Interface:Client"}
@@ -76,18 +80,11 @@ def collect(items: List[Dict[str, Any]]):
 # ------------------------------------------------------------------------------
 
 def main():
-    proc = subprocess.run(["pw-dump"], capture_output=True, text=True, check=True)
-    items = json.loads(proc.stdout)
-
+    items = pw_dump()
+    
     stream_out, sinks, stream_in, sources = collect(items)
 
-    cols_stream = ["node.id", "application.name", "application.process.binary", "node.name", "node.description", "media.class", "client.id", "state"]
-    cols_devnode = ["node.id", "node.name", "node.description", "media.class", "state"]
-
-    # print_section("Programs outputting audio (Stream/Output/Audio)", stream_out, cols_stream)
-    print_section("Playback devices (Audio/Sink nodes)", sinks, cols_devnode)
-    # print_section("Programs capturing audio (Stream/Input/Audio)", stream_in, cols_stream)
-    # print_section("Capture devices (Audio/Source nodes)", sources, cols_devnode)
+    print_section("Playback devices (Audio/Sink nodes)", sinks, ["node.id", "node.description", "state"])
     
     new_output = input("Set output: >")
     
