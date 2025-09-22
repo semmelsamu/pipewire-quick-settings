@@ -6,7 +6,7 @@ from typing import List, Optional
 import gi
 
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gio, Gtk
+from gi.repository import Gio, GLib, Gtk
 
 from pw_client import set_default_sink, set_mute, set_profile, set_volume
 from .models import ProfileItem
@@ -30,6 +30,7 @@ class QuickSettingsWindow(Gtk.ApplicationWindow):
         self._ignore_volume_signal = False
         self._ignore_mute_signal = False
         self._ignore_profile_signal = False
+        self._refresh_source_id: Optional[int] = None
 
         root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
         root.set_margin_top(24)
@@ -258,5 +259,17 @@ class QuickSettingsWindow(Gtk.ApplicationWindow):
         self.profile_dropdown.set_sensitive(False)
 
     def refresh_snapshot(self, preferred_sink_id: Optional[int]) -> None:
-        self.snapshot.refresh()
-        self.populate_from_snapshot(preferred_sink_id)
+        if self._refresh_source_id is not None:
+            GLib.source_remove(self._refresh_source_id)
+
+        def _do_refresh() -> bool:
+            try:
+                self.snapshot.refresh()
+                self.populate_from_snapshot(preferred_sink_id)
+            except Exception as exc:  # pragma: no cover - surface unexpected issues
+                print(f"Failed to refresh PipeWire snapshot: {exc}")
+            finally:
+                self._refresh_source_id = None
+            return GLib.SOURCE_REMOVE
+
+        self._refresh_source_id = GLib.idle_add(_do_refresh)
