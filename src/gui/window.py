@@ -1,18 +1,71 @@
 """Gtk window for the PipeWire quick settings UI."""
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import List, Optional, cast
 
 import subprocess
 
 import gi
 
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gio, GLib, Gtk
+from gi.repository import Gio, GLib, Gtk, Gdk, Pango
 
 from pw_client import set_default_sink, set_mute, set_profile, set_volume
 from .models import ProfileItem
 from .snapshot import PipewireSnapshot
+
+
+_CSS_PROVIDER: Optional[Gtk.CssProvider] = None
+
+
+def _ensure_fixed_width_css(widget: Gtk.Widget) -> None:
+    """Install a CSS rule that keeps the window at a fixed width."""
+    global _CSS_PROVIDER
+    if _CSS_PROVIDER is not None:
+        return
+
+    display = widget.get_display() or Gdk.Display.get_default()
+    if display is None:
+        return
+
+    provider = Gtk.CssProvider()
+    provider.load_from_data(b"""
+    window.fixed-quick-settings {
+        min-width: 400px;
+        max-width: 400px;
+    }
+    """)
+    Gtk.StyleContext.add_provider_for_display(display, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+    _CSS_PROVIDER = provider
+
+
+def _configure_dropdown(dropdown: Gtk.DropDown, max_width_chars: int = 36) -> None:
+    """Ensure dropdown buttons ellipsize long labels within the fixed width."""
+    factory = Gtk.SignalListItemFactory()
+
+    def _setup(_factory: Gtk.SignalListItemFactory, list_item: Gtk.ListItem) -> None:
+        label = Gtk.Label(xalign=0.0)
+        label.set_single_line_mode(True)
+        label.set_ellipsize(Pango.EllipsizeMode.END)
+        label.set_width_chars(1)
+        label.set_max_width_chars(max_width_chars)
+        list_item.set_child(label)
+
+    def _bind(_factory: Gtk.SignalListItemFactory, list_item: Gtk.ListItem) -> None:
+        item = list_item.get_item()
+        label = cast(Gtk.Label, list_item.get_child())
+        if item is None:
+            label.set_text("")
+            return
+
+        if hasattr(item, "get_string"):
+            label.set_text(item.get_string())
+        else:
+            label.set_text(str(item))
+
+    factory.connect("setup", _setup)
+    factory.connect("bind", _bind)
+    dropdown.set_factory(factory)
 
 
 class QuickSettingsWindow(Gtk.ApplicationWindow):
@@ -20,7 +73,10 @@ class QuickSettingsWindow(Gtk.ApplicationWindow):
 
     def __init__(self, app: Gtk.Application) -> None:
         super().__init__(application=app, title="Pipewire Quick Settings")
-        self.set_default_size(420, 240)
+        self.add_css_class("fixed-quick-settings")
+        _ensure_fixed_width_css(self)
+
+        self.set_default_size(400, 240)
         self.set_resizable(False)
 
         self.snapshot = PipewireSnapshot()
@@ -82,12 +138,14 @@ class QuickSettingsWindow(Gtk.ApplicationWindow):
         self.sink_model = Gtk.StringList.new([])  # type: ignore[arg-type]
         self.sink_dropdown = Gtk.DropDown(model=self.sink_model)
         self.sink_dropdown.set_hexpand(True)
+        _configure_dropdown(self.sink_dropdown)
         self.sink_dropdown.connect("notify::selected", self.on_sink_selected)
         dropdown_row.append(self.sink_dropdown)
 
         self.profile_model = Gtk.StringList.new([])  # type: ignore[arg-type]
         self.profile_dropdown = Gtk.DropDown(model=self.profile_model)
         self.profile_dropdown.set_hexpand(False)
+        _configure_dropdown(self.profile_dropdown)
         self.profile_dropdown.connect("notify::selected", self.on_profile_selected)
         dropdown_row.append(self.profile_dropdown)
 
