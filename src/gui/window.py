@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import List, Optional
 
+import subprocess
+
 import gi
 
 gi.require_version("Gtk", "4.0")
@@ -39,10 +41,22 @@ class QuickSettingsWindow(Gtk.ApplicationWindow):
         root.set_margin_end(24)
         self.set_child(root)
 
+        header_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        header_row.set_hexpand(True)
+        root.append(header_row)
+
         title = Gtk.Label(label="Pipewire Quick Settings")
         title.get_style_context().add_class("title-2")
         title.set_valign(Gtk.Align.START)
-        root.append(title)
+        title.set_halign(Gtk.Align.START)
+        title.set_hexpand(True)
+        header_row.append(title)
+
+        more_button = Gtk.Button(label="More")
+        more_button.set_valign(Gtk.Align.START)
+        more_button.set_halign(Gtk.Align.END)
+        more_button.connect("clicked", self.on_more_clicked)
+        header_row.append(more_button)
 
         slider_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
         root.append(slider_row)
@@ -78,6 +92,19 @@ class QuickSettingsWindow(Gtk.ApplicationWindow):
         dropdown_row.append(self.profile_dropdown)
 
         self.populate_from_snapshot()
+
+    def on_more_clicked(self, _button: Gtk.Button) -> None:
+        """Launch the full control app and close the quick settings window."""
+        try:
+            subprocess.Popen(["flatpak", "run", "com.saivert.pwvucontrol"])
+        except Exception as exc:  # pragma: no cover - launching external app best effort
+            print(f"Failed to launch pwvucontrol: {exc}")
+
+        app = self.get_application()
+        if app is not None:
+            app.quit()
+        else:
+            self.close()
 
     def populate_from_snapshot(self, preferred_sink_id: Optional[int] = None) -> None:
         sink_labels = [sink.display_name for sink in self.snapshot.sinks]
