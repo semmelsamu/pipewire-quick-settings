@@ -40,10 +40,10 @@ def _ensure_fixed_width_css(widget: Gtk.Widget) -> None:
 
 
 def _configure_dropdown(dropdown: Gtk.DropDown, max_width_chars: int = 36) -> None:
-    """Ensure dropdown buttons ellipsize long labels within the fixed width."""
-    factory = Gtk.SignalListItemFactory()
+    """Ensure dropdown buttons ellipsize in the widget but list items stay readable."""
+    display_factory = Gtk.SignalListItemFactory()
 
-    def _setup(_factory: Gtk.SignalListItemFactory, list_item: Gtk.ListItem) -> None:
+    def _setup_display(_factory: Gtk.SignalListItemFactory, list_item: Gtk.ListItem) -> None:
         label = Gtk.Label(xalign=0.0)
         label.set_single_line_mode(True)
         label.set_ellipsize(Pango.EllipsizeMode.END)
@@ -51,7 +51,7 @@ def _configure_dropdown(dropdown: Gtk.DropDown, max_width_chars: int = 36) -> No
         label.set_max_width_chars(max_width_chars)
         list_item.set_child(label)
 
-    def _bind(_factory: Gtk.SignalListItemFactory, list_item: Gtk.ListItem) -> None:
+    def _bind_label(list_item: Gtk.ListItem) -> None:
         item = list_item.get_item()
         label = cast(Gtk.Label, list_item.get_child())
         if item is None:
@@ -63,9 +63,27 @@ def _configure_dropdown(dropdown: Gtk.DropDown, max_width_chars: int = 36) -> No
         else:
             label.set_text(str(item))
 
-    factory.connect("setup", _setup)
-    factory.connect("bind", _bind)
-    dropdown.set_factory(factory)
+    def _bind_display(_factory: Gtk.SignalListItemFactory, list_item: Gtk.ListItem) -> None:
+        _bind_label(list_item)
+
+    display_factory.connect("setup", _setup_display)
+    display_factory.connect("bind", _bind_display)
+    dropdown.set_factory(display_factory)
+
+    list_factory = Gtk.SignalListItemFactory()
+
+    def _setup_list(_factory: Gtk.SignalListItemFactory, list_item: Gtk.ListItem) -> None:
+        label = Gtk.Label(xalign=0.0)
+        label.set_single_line_mode(True)
+        label.set_ellipsize(Pango.EllipsizeMode.NONE)
+        list_item.set_child(label)
+
+    def _bind_list(_factory: Gtk.SignalListItemFactory, list_item: Gtk.ListItem) -> None:
+        _bind_label(list_item)
+
+    list_factory.connect("setup", _setup_list)
+    list_factory.connect("bind", _bind_list)
+    dropdown.set_list_factory(list_factory)
 
 
 class QuickSettingsWindow(Gtk.ApplicationWindow):
@@ -76,7 +94,7 @@ class QuickSettingsWindow(Gtk.ApplicationWindow):
         self.add_css_class("fixed-quick-settings")
         _ensure_fixed_width_css(self)
 
-        self.set_default_size(400, 240)
+        self.set_default_size(400, 160)
         self.set_resizable(False)
 
         self.snapshot = PipewireSnapshot()
@@ -90,11 +108,11 @@ class QuickSettingsWindow(Gtk.ApplicationWindow):
         self._ignore_profile_signal = False
         self._refresh_source_id: Optional[int] = None
 
-        root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
-        root.set_margin_top(24)
-        root.set_margin_bottom(24)
-        root.set_margin_start(24)
-        root.set_margin_end(24)
+        root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        root.set_margin_top(12)
+        root.set_margin_bottom(12)
+        root.set_margin_start(12)
+        root.set_margin_end(12)
         self.set_child(root)
 
         header_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
@@ -102,7 +120,7 @@ class QuickSettingsWindow(Gtk.ApplicationWindow):
         root.append(header_row)
 
         title = Gtk.Label(label="Pipewire Quick Settings")
-        title.get_style_context().add_class("title-2")
+        title.get_style_context().add_class("title-4")
         title.set_valign(Gtk.Align.START)
         title.set_halign(Gtk.Align.START)
         title.set_hexpand(True)
@@ -132,22 +150,26 @@ class QuickSettingsWindow(Gtk.ApplicationWindow):
         self.volume_scale.connect("value-changed", self.on_volume_changed)
         slider_row.append(self.volume_scale)
 
-        dropdown_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        dropdown_row = Gtk.Grid(column_spacing=8)
+        dropdown_row.set_column_homogeneous(True)
+        dropdown_row.set_hexpand(True)
         root.append(dropdown_row)
 
         self.sink_model = Gtk.StringList.new([])  # type: ignore[arg-type]
         self.sink_dropdown = Gtk.DropDown(model=self.sink_model)
         self.sink_dropdown.set_hexpand(True)
+        self.sink_dropdown.set_halign(Gtk.Align.FILL)
         _configure_dropdown(self.sink_dropdown)
         self.sink_dropdown.connect("notify::selected", self.on_sink_selected)
-        dropdown_row.append(self.sink_dropdown)
+        dropdown_row.attach(self.sink_dropdown, 0, 0, 3, 1)
 
         self.profile_model = Gtk.StringList.new([])  # type: ignore[arg-type]
         self.profile_dropdown = Gtk.DropDown(model=self.profile_model)
-        self.profile_dropdown.set_hexpand(False)
+        self.profile_dropdown.set_hexpand(True)
+        self.profile_dropdown.set_halign(Gtk.Align.FILL)
         _configure_dropdown(self.profile_dropdown)
         self.profile_dropdown.connect("notify::selected", self.on_profile_selected)
-        dropdown_row.append(self.profile_dropdown)
+        dropdown_row.attach(self.profile_dropdown, 4, 0, 2, 1)
 
         self.populate_from_snapshot()
 
