@@ -1,15 +1,12 @@
 # Pipewire Quick Settings
 
-Quick settings utility for PipeWire, written in Python. Contains a command-line utility and a graphical interface.
+Quick settings utility for PipeWire. Contains a command-line utility and a graphical interface.
 
 ![Screenshot of the GUI](screenshot.png)
 
 This utility is dead simple on purpose, designed to be used as a quick switcher / volume control which can be started from e.g. your waybar.
 
 It uses `pw-dump` and `wpctl` to interact with pipewire.
-
-> [!NOTE]  
-> This utility is mostly vibe-coded by [GPT-5 Codex](https://openai.com/codex/).
 
 ## Usage
 
