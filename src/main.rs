@@ -33,9 +33,11 @@ fn main() {
         .read_line(&mut input)
         .expect("Failed to read line");
         
-    print!("Chose sink {}", input);
+    let sink_id: u32 = input.trim().parse().expect("Invalid sink id");
+
+    println!("Chose sink {}", sink_id);
     
-    wpctl_set_default(input);
+    wpctl_set_default(sink_id);
 }
 
 fn audio_sinks(data: &Value) -> Vec<&Value> {
@@ -56,10 +58,10 @@ fn audio_sinks(data: &Value) -> Vec<&Value> {
         .collect()
 }
 
-fn wpctl_set_default(sink_id: String) {
+fn wpctl_set_default(sink_id: u32) {
     let output = Command::new("wpctl")
         .arg("set-default")
-        .arg(sink_id)
+        .arg(sink_id.to_string())
         .output()
         .expect("Error setting default sink");
 }
