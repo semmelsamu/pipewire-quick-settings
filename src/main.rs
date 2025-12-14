@@ -4,16 +4,14 @@ use std::io;
 use std::io::Write;
 
 fn main() {
-    let output = Command::new("pw-dump")
-        .output()
-        .expect("Error running pw-dump");
-
-    if !output.status.success() {
-        panic!("{}", String::from_utf8_lossy(&output.stderr));
-    }
-
-    let data: Value = serde_json::from_slice(&output.stdout).unwrap();
+    let input = prompt("What do you want to do?");
     
+    match input {
+        _ => panic!("No valid option")
+    }
+    
+    let data = pw_dump();
+  
     let sinks = audio_sinks(&data);
     
     println!("Default sink name: {:?}", get_default_sink_name(&data));
@@ -41,6 +39,18 @@ fn prompt(question: &str) -> String {
         .expect("Failed to read line");
         
     input
+}
+
+fn pw_dump() -> Value {
+    let output = Command::new("pw-dump")
+        .output()
+        .expect("Error running pw-dump");
+
+    if !output.status.success() {
+        panic!("{}", String::from_utf8_lossy(&output.stderr));
+    }
+
+    serde_json::from_slice(&output.stdout).expect("Failed to parse pw-dump output")
 }
 
 fn audio_sinks(data: &Value) -> Vec<&Value> {
