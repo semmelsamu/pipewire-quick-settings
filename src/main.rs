@@ -17,10 +17,6 @@ fn main() {
     let sinks = audio_sinks(&data);
     
     for s in &sinks {
-        println!("{}", serde_json::to_string(&s).unwrap());
-    }
-    
-    for s in &sinks {
         println!("{} {}", s["id"], s["info"]["props"]["node.description"]);
     }
     
