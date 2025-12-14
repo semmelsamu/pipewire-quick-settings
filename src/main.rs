@@ -1,7 +1,9 @@
-use std::process::Command;
+mod utils;
+mod pipewire;
+
+use utils::prompt;
 use serde_json::Value;
-use std::io;
-use std::io::Write;
+use pipewire::{pw_dump, wpctl_set_default};
 
 fn main() {
     let input = prompt("What do you want to do?");
@@ -24,33 +26,8 @@ fn main() {
     let sink_id: u32 = input.trim().parse().expect("Invalid sink id");
 
     println!("Chose sink {}", sink_id);
-    
+ 
     wpctl_set_default(sink_id);
-}
-
-fn prompt(question: &str) -> String {
-    print!("{} > ", question);
-    io::stdout().flush().unwrap();
-    
-    let mut input = String::new();
-    
-    io::stdin()
-        .read_line(&mut input)
-        .expect("Failed to read line");
-        
-    input
-}
-
-fn pw_dump() -> Value {
-    let output = Command::new("pw-dump")
-        .output()
-        .expect("Error running pw-dump");
-
-    if !output.status.success() {
-        panic!("{}", String::from_utf8_lossy(&output.stderr));
-    }
-
-    serde_json::from_slice(&output.stdout).expect("Failed to parse pw-dump output")
 }
 
 fn audio_sinks(data: &Value) -> Vec<&Value> {
@@ -69,14 +46,6 @@ fn audio_sinks(data: &Value) -> Vec<&Value> {
                 == Some("Audio/Sink")
         })
         .collect()
-}
-
-fn wpctl_set_default(sink_id: u32) {
-    Command::new("wpctl")
-        .arg("set-default")
-        .arg(sink_id.to_string())
-        .output()
-        .expect("Error setting default sink");
 }
 
 fn get_default_sink_name(dump: &Value) -> Option<String> {
