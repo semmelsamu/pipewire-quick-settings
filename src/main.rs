@@ -26,7 +26,7 @@ fn main() {
             "1" => {
                 let data = pw_dump();
                 match default_sink(&data) {
-                    Some(sink) => heading(&format!("Default sink: {}", sink.description)),
+                    Some(sink_name) => heading(&format!("Default sink: {}", sink_name)),
                     None => heading("Default sink not found"),
                 }
             }
@@ -36,8 +36,9 @@ fn main() {
                 
                 heading("Available sinks");
                 
+                let default_sink_name = default_sink(&data);
                 for s in sinks {
-                    if Some(s.id) == default_sink(&data).map(|s| s.id) {
+                    if default_sink_name.as_ref() == Some(&s.name) {
                         print!("* ");
                     } else {
                         print!("  ");

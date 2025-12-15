@@ -97,8 +97,8 @@ pub fn audio_sinks(data: &Value) -> Vec<Sink> {
         .collect()
 }
 
-pub fn default_sink(dump: &Value) -> Option<Sink> {
-    let default_sink_name = dump
+pub fn default_sink(dump: &Value) -> Option<String> {
+    dump
         .as_array()?
         .iter()
         .find(|obj| {
@@ -126,9 +126,5 @@ pub fn default_sink(dump: &Value) -> Option<Sink> {
                 Value::String(s) => Some(s.clone()),
                 _ => None,
             }
-        })?;
-        
-    audio_sinks(dump)
-        .into_iter()
-        .find(|sink| sink.name == default_sink_name)
+        })
 }
