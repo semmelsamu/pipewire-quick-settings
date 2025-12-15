@@ -3,6 +3,7 @@ mod pipewire;
 mod parsers;
 mod types;
 mod printers;
+mod interfaces;
 
 use utils::{prompt, heading};
 use pipewire::{pw_dump, wpctl_set_default};
