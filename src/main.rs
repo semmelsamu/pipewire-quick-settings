@@ -32,7 +32,7 @@ fn main() {
                 let sinks = audio_sinks(&data);
 
                 for s in &sinks {
-                    println!("{} {}", s["id"], s["info"]["props"]["node.description"]);
+                    println!("{} (device {}, port {})", s.id, s.device, s.port);
                 }
 
                 let input = prompt("Choose sink id");

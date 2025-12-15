@@ -1,19 +1,31 @@
 use serde_json::Value;
+use crate::utils::value_as_u32;
+use crate::types::Sink;
 
-pub fn audio_sinks(data: &Value) -> Vec<&Value> {
+pub fn audio_sinks(data: &Value) -> Vec<Sink> {
     data.as_array()
         .into_iter()
         .flatten()
-        .filter(|obj| {
-            obj.get("type")
-                .and_then(Value::as_str)
+        .filter_map(|obj| {
+            let is_sink = obj.get("type").and_then(Value::as_str)
                 == Some("PipeWire:Interface:Node")
-            &&
-            obj.get("info")
-                .and_then(|i| i.get("props"))
-                .and_then(|p| p.get("media.class"))
-                .and_then(Value::as_str)
-                == Some("Audio/Sink")
+                && obj
+                    .get("info")
+                    .and_then(|i| i.get("props"))
+                    .and_then(|p| p.get("media.class"))
+                    .and_then(Value::as_str)
+                    == Some("Audio/Sink");
+
+            if !is_sink {
+                return None;
+            }
+
+            let id = obj.get("id").and_then(value_as_u32)?;
+            let props = obj.get("info")?.get("props")?;
+            let device = props.get("device.id").and_then(value_as_u32)?;
+            let port = props.get("card.profile.device").and_then(value_as_u32)?;
+
+            Some(Sink { id, device, port })
         })
         .collect()
 }
