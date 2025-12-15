@@ -1,6 +1,7 @@
 mod utils;
 mod pipewire;
 mod parsers;
+mod types;
 
 use utils::prompt;
 use pipewire::{pw_dump, wpctl_set_default};
