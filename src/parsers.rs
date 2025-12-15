@@ -19,15 +19,29 @@ pub fn devices(data: &Value) -> Vec<Device> {
                 return None;
             }
 
+            let props = obj.get("info")?.get("props")?;
+            let params = obj.get("info")?.get("params");
+            
+            // Try device.product.name first, fallback to device.description or device.alias
+            let name = props
+                .get("device.product.name")
+                .and_then(Value::as_str)
+                .or_else(|| props.get("device.description").and_then(Value::as_str))
+                .or_else(|| props.get("device.alias").and_then(Value::as_str))
+                .map(String::from)?;
+
             Some(Device {
                 id: obj.get("id").and_then(value_as_u32)?,
-                profiles: enum_profiles(obj.get("info")?.get("params")?.get("EnumProfile")?),
+                profiles: params
+                    .and_then(|p| p.get("EnumProfile"))
+                    .map(|v| enum_profiles(v))
+                    .unwrap_or_default(),
                 current_profile: 0,
-                routes: enum_routes(obj.get("info")?.get("params")?.get("EnumRoute")?),
-                name: obj.get("info")?.get("props")?
-                    .get("device.product.name")
-                    .and_then(Value::as_str)?
-                    .to_owned(),
+                routes: params
+                    .and_then(|p| p.get("EnumRoute"))
+                    .map(|v| enum_routes(v))
+                    .unwrap_or_default(),
+                name,
             })
         })
         .collect()
