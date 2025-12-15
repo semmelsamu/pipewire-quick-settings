@@ -38,7 +38,13 @@ fn main() {
                         print!("  ");
                     }
 
-                    println!("{} {} ({}%)", s.id, s.description, s.volume);
+                    println!(
+                        "{} {} ({}%) {}",
+                        s.id,
+                        s.description,
+                        s.volume,
+                        if s.muted { "Muted" } else { "" }
+                    );
                 }
 
                 let input = prompt("Choose sink id");

@@ -1,4 +1,4 @@
-use crate::pipewire::wpctl_get_volume;
+use crate::pipewire::{wpctl_get_mute, wpctl_get_volume};
 use crate::utils::value_as_u32;
 use serde_json::Value;
 
@@ -10,6 +10,7 @@ pub struct Sink {
     pub name: String,
     pub description: String,
     pub volume: u32,
+    pub muted: bool,
 }
 
 impl Sink {
@@ -38,6 +39,7 @@ impl Sink {
             .to_owned();
 
         let volume = wpctl_get_volume(id).unwrap();
+        let muted = wpctl_get_mute(id).unwrap();
 
         Some(Sink {
             id,
@@ -46,6 +48,7 @@ impl Sink {
             name,
             description,
             volume,
+            muted,
         })
     }
 }
