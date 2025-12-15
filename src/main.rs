@@ -23,7 +23,7 @@ fn main() {
             "1" => {
                 let data = pw_dump();
                 match default_sink(&data) {
-                    Some(name) => println!("Default sink: {}", name),
+                    Some(sink) => println!("Default sink: {}", sink.description),
                     None => println!("Default sink not found"),
                 }
             }
