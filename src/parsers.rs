@@ -74,6 +74,7 @@ fn enum_routes(data: &Value) -> Vec<EnumRoute> {
         .flatten()
         .filter_map(|obj| {
             Some(EnumRoute { 
+                index: obj.get("index").and_then(|idx| idx.as_u64().map(|x| x as u32))?,
                 description: obj.get("description").and_then(Value::as_str)?.to_owned(), 
                 priority: obj.get("priority").and_then(value_as_u32)?, 
                 available: obj.get("available").and_then(Value::as_str)?.to_owned() })

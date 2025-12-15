@@ -15,7 +15,7 @@ pub fn device(device: &Device) {
         println!("{} {}", p.index, p.description);
     }
     println!("Routes:");
-    for (i, r) in device.routes.iter().enumerate().filter(|(_, r)| r.available != "no") {
-        println!("  {} {}", i, r.description);
+    for (_i, r) in device.routes.iter().enumerate().filter(|(_, r)| r.available != "no") {
+        println!("  {} {}", r.index, r.description);
     }
 }

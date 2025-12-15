@@ -26,6 +26,7 @@ pub struct Sink {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EnumRoute {
+    pub index: u32,
     pub description: String,
     pub priority: u32,
     pub available: String,
