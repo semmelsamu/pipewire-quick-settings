@@ -6,7 +6,7 @@ pub fn device(device: &Device) {
     
     println!("Profiles:");
     for (_i, p) in device.profiles.iter().enumerate().filter(|(_, p)| p.available != "no") {
-        if p.index == device.current_profile {
+        if device.current_profile.as_ref().map(|cp| cp.index) == Some(p.index) {
             print!("* ");
         } else {
             print!("  ");

@@ -29,20 +29,26 @@ pub fn devices(data: &Value) -> Vec<Device> {
                 .or_else(|| props.get("device.description").and_then(Value::as_str))
                 .or_else(|| props.get("device.alias").and_then(Value::as_str))
                 .map(String::from)?;
+            
+            let profiles = params
+                .and_then(|p| p.get("EnumProfile"))
+                .map(|v| enum_profiles(v))
+                .unwrap_or_default();
+            
+            let current_profile_id = params
+                .and_then(|p| p.get("Profile"))
+                .and_then(|v| v.as_array())
+                .and_then(|arr| arr.get(0))
+                .and_then(|profile| profile.get("index"))
+                .and_then(|idx| idx.as_u64().map(|x| x as u32));
+            
+            let current_profile = current_profile_id
+                .and_then(|id| profiles.iter().find(|p| p.index == id).cloned());
 
             Some(Device {
                 id: obj.get("id").and_then(value_as_u32)?,
-                profiles: params
-                    .and_then(|p| p.get("EnumProfile"))
-                    .map(|v| enum_profiles(v))
-                    .unwrap_or_default(),
-                current_profile: params
-                    .and_then(|p| p.get("Profile"))
-                    .and_then(|v| v.as_array())
-                    .and_then(|arr| arr.get(0))
-                    .and_then(|profile| profile.get("index"))
-                    .and_then(|idx| idx.as_u64().map(|x| x as u32))
-                    .unwrap(),
+                profiles,
+                current_profile,
                 routes: params
                     .and_then(|p| p.get("EnumRoute"))
                     .map(|v| enum_routes(v))
