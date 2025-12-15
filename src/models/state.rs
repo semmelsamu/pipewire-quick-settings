@@ -2,22 +2,6 @@ use serde_json::Value;
 use crate::models::device::Device;
 use crate::models::sink::Sink;
 
-pub fn devices(data: &Value) -> Vec<Device> {
-    data.as_array()
-        .into_iter()
-        .flatten()
-        .filter_map(|obj| Device::new(obj))
-        .collect()
-}
-
-pub fn sinks(data: &Value) -> Vec<Sink> {
-    data.as_array()
-        .into_iter()
-        .flatten()
-        .filter_map(|obj| Sink::new(obj))
-        .collect()
-}
-
 pub fn default_sink_name(dump: &Value) -> Option<String> {
     dump
         .as_array()?
@@ -59,20 +43,35 @@ pub struct PipeWireState {
 
 impl PipeWireState {
     pub fn new(data: &Value) -> Self {
-        let sinks_vec = sinks(data);
+        let sinks: Vec<Sink> = data.as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|obj| Sink::new(obj))
+            .collect();
+        
         let default_sink_name = default_sink_name(data);
         
         let default_sink = default_sink_name
             .and_then(|name| {
-                sinks_vec.iter()
+                sinks.iter()
                     .find(|s| s.name == name)
                     .cloned()
             });
+            
+        let devices: Vec<Device> = data.as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|obj| Device::new(obj))
+            .collect();
         
         PipeWireState {
-            devices: devices(data),
-            sinks: sinks_vec,
+            devices,
+            sinks,
             default_sink,
         }
+    }
+    
+    pub fn is_default_sink(&self, sink: &Sink) -> bool {
+        self.default_sink.as_ref() == Some(sink)
     }
 }

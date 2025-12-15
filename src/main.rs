@@ -5,13 +5,10 @@ mod models;
 
 use utils::{prompt, heading};
 use pipewire::{pw_dump, wpctl_set_default};
-use crate::models::state::{PipeWireState, devices, sinks, default_sink_name};
+use crate::models::state::PipeWireState;
 
 fn main() {
     heading("PipeWire Quick Settings");
-    
-    let data = pw_dump();
-    let state = PipeWireState::new(&data);
     
     loop {
         heading("Options");
@@ -21,25 +18,23 @@ fn main() {
         println!("- 3 Show devices and profiles");
         
         let input = prompt("What do you want to do?");
+    
+        let data = pw_dump();
+        let state = PipeWireState::new(&data);
 
         match input.trim() {
             "0" => break,
             "1" => {
-                let data = pw_dump();
-                match default_sink_name(&data) {
-                    Some(sink_name) => heading(&format!("Default sink: {}", sink_name)),
-                    None => heading("Default sink not found"),
+                match &state.default_sink {
+                    Some(sink) => println!("Default sink: {}", sink.description),
+                    None => println!("Could not find default sink"),
                 }
             }
             "2" => {
-                let data = pw_dump();
-                let sinks = sinks(&data);
-                
                 heading("Available sinks");
                 
-                let default_sink_name = default_sink_name(&data);
-                for s in sinks {
-                    if default_sink_name.as_ref() == Some(&s.name) {
+                for s in &state.sinks {
+                    if state.is_default_sink(s) {
                         print!("* ");
                     } else {
                         print!("  ");
@@ -59,9 +54,7 @@ fn main() {
                 }
             }
             "3" => {
-                let data = pw_dump();
-                let devices = devices(&data);
-                for d in &devices {
+                for d in &state.devices {
                     printers::device(d);
                 }
             }
