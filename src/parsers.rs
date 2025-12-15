@@ -1,7 +1,9 @@
 use serde_json::Value;
 use crate::utils::value_as_u32;
-use crate::types::{Device, EnumProfile, EnumRoute};
+use crate::types::Device;
 use crate::interfaces::sink::Sink;
+use crate::interfaces::profile::EnumProfile;
+use crate::interfaces::route::EnumRoute;
 
 pub fn devices(data: &Value) -> Vec<Device> {
     data.as_array()
@@ -31,9 +33,24 @@ pub fn devices(data: &Value) -> Vec<Device> {
                 .or_else(|| props.get("device.alias").and_then(Value::as_str))
                 .map(String::from)?;
             
-            let profiles = params
+            let routes: Vec<EnumRoute> = params
+                .and_then(|p| p.get("EnumRoute"))
+                .and_then(|v| v.as_array())
+                .map(|arr| {
+                    arr.iter()
+                        .filter_map(|obj| EnumRoute::new(obj))
+                        .collect()
+                })
+                .unwrap_or_default();
+            
+            let profiles: Vec<EnumProfile> = params
                 .and_then(|p| p.get("EnumProfile"))
-                .map(|v| enum_profiles(v))
+                .and_then(|v| v.as_array())
+                .map(|arr| {
+                    arr.iter()
+                        .filter_map(|obj| EnumProfile::new(obj))
+                        .collect()
+                })
                 .unwrap_or_default();
             
             let current_profile_id = params
@@ -50,44 +67,13 @@ pub fn devices(data: &Value) -> Vec<Device> {
                 id: obj.get("id").and_then(value_as_u32)?,
                 profiles,
                 current_profile,
-                routes: params
-                    .and_then(|p| p.get("EnumRoute"))
-                    .map(|v| enum_routes(v))
-                    .unwrap_or_default(),
+                routes,
                 name,
             })
         })
         .collect()
 }
 
-fn enum_profiles(data: &Value) -> Vec<EnumProfile> {
-    data.as_array()
-        .into_iter()
-        .flatten()
-        .filter_map(|obj| {
-            Some(EnumProfile { 
-                index: obj.get("index").and_then(|idx| idx.as_u64().map(|x| x as u32))?,
-                description: obj.get("description").and_then(Value::as_str)?.to_owned(), 
-                priority: obj.get("priority").and_then(value_as_u32)?, 
-                available: obj.get("available").and_then(Value::as_str)?.to_owned() 
-            })
-        })
-        .collect()
-}
-
-fn enum_routes(data: &Value) -> Vec<EnumRoute> {
-    data.as_array()
-        .into_iter()
-        .flatten()
-        .filter_map(|obj| {
-            Some(EnumRoute { 
-                index: obj.get("index").and_then(|idx| idx.as_u64().map(|x| x as u32))?,
-                description: obj.get("description").and_then(Value::as_str)?.to_owned(), 
-                priority: obj.get("priority").and_then(value_as_u32)?, 
-                available: obj.get("available").and_then(Value::as_str)?.to_owned() })
-        })
-        .collect()
-}
 
 pub fn audio_sinks(data: &Value) -> Vec<Sink> {
     data.as_array()
