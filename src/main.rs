@@ -50,6 +50,14 @@ fn main() {
                 let devices = devices(&data);
                 for d in &devices {
                     println!("- {} {}", d.id, d.name);
+                    println!("  Profiles:");
+                    for (i, p) in d.profiles.iter().enumerate().filter(|(_, p)| p.available != "no") {
+                        println!("  - {} {}", i, p.description);
+                    }
+                    println!("  Routes:");
+                    for (i, r) in d.routes.iter().enumerate().filter(|(_, r)| r.available != "no") {
+                        println!("  - {} {}", i, r.description);
+                    }
                 }
             }
             _ => println!("Invalid option"),

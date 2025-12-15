@@ -1,6 +1,6 @@
 use serde_json::Value;
 use crate::utils::value_as_u32;
-use crate::types::{Sink, Device};
+use crate::types::{Sink, Device, EnumProfile, EnumRoute};
 
 pub fn devices(data: &Value) -> Vec<Device> {
     data.as_array()
@@ -21,14 +21,43 @@ pub fn devices(data: &Value) -> Vec<Device> {
 
             Some(Device {
                 id: obj.get("id").and_then(value_as_u32)?,
-                profiles: Vec::new(),
+                profiles: enum_profiles(obj.get("info")?.get("params")?.get("EnumProfile")?),
                 current_profile: 0,
-                routes: Vec::new(),
+                routes: enum_routes(obj.get("info")?.get("params")?.get("EnumRoute")?),
                 name: obj.get("info")?.get("props")?
                     .get("device.product.name")
                     .and_then(Value::as_str)?
                     .to_owned(),
             })
+        })
+        .collect()
+}
+
+fn enum_profiles(data: &Value) -> Vec<EnumProfile> {
+    data.as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|obj| {
+            Some(EnumProfile { 
+                name: obj.get("name").and_then(Value::as_str)?.to_owned(), 
+                description: obj.get("description").and_then(Value::as_str)?.to_owned(), 
+                priority: obj.get("priority").and_then(value_as_u32)?, 
+                available: obj.get("available").and_then(Value::as_str)?.to_owned() 
+            })
+        })
+        .collect()
+}
+
+fn enum_routes(data: &Value) -> Vec<EnumRoute> {
+    data.as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|obj| {
+            Some(EnumRoute { 
+                name: obj.get("name").and_then(Value::as_str)?.to_owned(), 
+                description: obj.get("description").and_then(Value::as_str)?.to_owned(), 
+                priority: obj.get("priority").and_then(value_as_u32)?, 
+                available: obj.get("available").and_then(Value::as_str)?.to_owned() })
         })
         .collect()
 }
