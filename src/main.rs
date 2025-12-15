@@ -34,9 +34,15 @@ fn main() {
                 let sinks = audio_sinks(&data);
                 
                 heading("Available sinks");
-
-                for s in &sinks {
-                    println!("- {} {}", s.id, s.description);
+                
+                for s in sinks {
+                    if Some(s.id) == default_sink(&data).map(|s| s.id) {
+                        print!("* ");
+                    } else {
+                        print!("  ");
+                    }
+                    
+                    println!("{} {}", s.id, s.description);
                 }
 
                 let input = prompt("Choose sink id");
