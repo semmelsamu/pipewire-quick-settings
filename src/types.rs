@@ -19,6 +19,8 @@ pub struct Sink {
     pub id: u32,
     pub device: u32,
     pub port: u32,
+    pub name: String,
+    pub description: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
