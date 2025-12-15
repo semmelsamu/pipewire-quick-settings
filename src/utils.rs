@@ -1,3 +1,4 @@
+use serde_json::Value;
 use std::io::{self, Write};
 
 pub fn prompt(question: &str) -> String {
@@ -11,4 +12,12 @@ pub fn prompt(question: &str) -> String {
         .expect("Failed to read line");
         
     input
+}
+
+pub fn value_as_u32(value: &Value) -> Option<u32> {
+    match value {
+        Value::Number(n) => n.as_u64().and_then(|n| u32::try_from(n).ok()),
+        Value::String(s) => s.parse::<u32>().ok(),
+        _ => None,
+    }
 }
