@@ -5,16 +5,17 @@ mod types;
 
 use utils::prompt;
 use pipewire::{pw_dump, wpctl_set_default};
-use parsers::{default_sink, audio_sinks};
+use parsers::{default_sink, audio_sinks, devices};
 
 fn main() {
     println!("PipeWire Quick Settings");
     
     loop {
         println!();
-        println!("0 = Exit");
-        println!("1 = Show default sink");
-        println!("2 = Set default sink");
+        println!("- 0 Exit");
+        println!("- 1 Show default sink");
+        println!("- 2 Set default sink");
+        println!("- 3 Show devices");
         
         let input = prompt("What do you want to do?");
 
@@ -32,7 +33,7 @@ fn main() {
                 let sinks = audio_sinks(&data);
 
                 for s in &sinks {
-                    println!("{} {}", s.id, s.description);
+                    println!("- {} {}", s.id, s.description);
                 }
 
                 let input = prompt("Choose sink id");
@@ -44,7 +45,16 @@ fn main() {
                     Err(_) => println!("Invalid sink id"),
                 }
             }
+            "3" => {
+                let data = pw_dump();
+                let devices = devices(&data);
+                for d in &devices {
+                    println!("- {} {}", d.id, d.name);
+                }
+            }
             _ => println!("Invalid option"),
         }
     }
+    
+    println!("Bye bye.");
 }

@@ -1,6 +1,37 @@
 use serde_json::Value;
 use crate::utils::value_as_u32;
-use crate::types::Sink;
+use crate::types::{Sink, Device};
+
+pub fn devices(data: &Value) -> Vec<Device> {
+    data.as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|obj| {
+            let is_device = obj.get("type").and_then(Value::as_str)
+                == Some("PipeWire:Interface:Device");
+                
+            let media_class = obj.get("info")?.get("props")?
+                .get("media.class")
+                .and_then(Value::as_str)?
+                .to_owned();
+                
+            if !is_device || media_class != "Audio/Device" {
+                return None;
+            }
+
+            Some(Device {
+                id: obj.get("id").and_then(value_as_u32)?,
+                profiles: Vec::new(),
+                current_profile: 0,
+                routes: Vec::new(),
+                name: obj.get("info")?.get("props")?
+                    .get("device.product.name")
+                    .and_then(Value::as_str)?
+                    .to_owned(),
+            })
+        })
+        .collect()
+}
 
 pub fn audio_sinks(data: &Value) -> Vec<Sink> {
     data.as_array()

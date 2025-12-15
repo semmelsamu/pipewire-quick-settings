@@ -4,6 +4,7 @@ pub struct Device {
     pub profiles: Vec<EnumProfile>,
     pub current_profile: u32,
     pub routes: Vec<EnumRoute>,
+    pub name: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
