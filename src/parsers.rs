@@ -36,7 +36,13 @@ pub fn devices(data: &Value) -> Vec<Device> {
                     .and_then(|p| p.get("EnumProfile"))
                     .map(|v| enum_profiles(v))
                     .unwrap_or_default(),
-                current_profile: 0,
+                current_profile: params
+                    .and_then(|p| p.get("Profile"))
+                    .and_then(|v| v.as_array())
+                    .and_then(|arr| arr.get(0))
+                    .and_then(|profile| profile.get("index"))
+                    .and_then(|idx| idx.as_u64().map(|x| x as u32))
+                    .unwrap(),
                 routes: params
                     .and_then(|p| p.get("EnumRoute"))
                     .map(|v| enum_routes(v))
