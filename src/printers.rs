@@ -1,5 +1,5 @@
-use crate::types::Device;
 use crate::utils::heading;
+use crate::models::device::Device;
 
 pub fn device(device: &Device) {
     heading(&format!("{} ({})", device.name, device.id));

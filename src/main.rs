@@ -1,14 +1,11 @@
 mod utils;
 mod pipewire;
-mod parsers;
-mod types;
 mod printers;
 mod models;
 
 use utils::{prompt, heading};
 use pipewire::{pw_dump, wpctl_set_default};
-use parsers::{default_sink, audio_sinks, devices};
-use crate::models::state::PipeWireState;
+use crate::models::state::{PipeWireState, devices, sinks, default_sink_name};
 
 fn main() {
     heading("PipeWire Quick Settings");
@@ -29,18 +26,18 @@ fn main() {
             "0" => break,
             "1" => {
                 let data = pw_dump();
-                match default_sink(&data) {
+                match default_sink_name(&data) {
                     Some(sink_name) => heading(&format!("Default sink: {}", sink_name)),
                     None => heading("Default sink not found"),
                 }
             }
             "2" => {
                 let data = pw_dump();
-                let sinks = audio_sinks(&data);
+                let sinks = sinks(&data);
                 
                 heading("Available sinks");
                 
-                let default_sink_name = default_sink(&data);
+                let default_sink_name = default_sink_name(&data);
                 for s in sinks {
                     if default_sink_name.as_ref() == Some(&s.name) {
                         print!("* ");
