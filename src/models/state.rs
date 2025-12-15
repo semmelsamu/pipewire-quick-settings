@@ -54,15 +54,25 @@ pub fn default_sink_name(dump: &Value) -> Option<String> {
 pub struct PipeWireState {
     pub devices: Vec<Device>,
     pub sinks: Vec<Sink>,
-    pub default_sink_name: Option<String>,
+    pub default_sink: Option<Sink>,
 }
 
 impl PipeWireState {
     pub fn new(data: &Value) -> Self {
+        let sinks_vec = sinks(data);
+        let default_sink_name = default_sink_name(data);
+        
+        let default_sink = default_sink_name
+            .and_then(|name| {
+                sinks_vec.iter()
+                    .find(|s| s.name == name)
+                    .cloned()
+            });
+        
         PipeWireState {
             devices: devices(data),
-            sinks: sinks(data),
-            default_sink_name: default_sink_name(data),
+            sinks: sinks_vec,
+            default_sink,
         }
     }
 }
