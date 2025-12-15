@@ -1,6 +1,6 @@
 use serde_json::Value;
 use crate::types::Device;
-use crate::interfaces::sink::Sink;
+use crate::models::sink::Sink;
 
 pub fn devices(data: &Value) -> Vec<Device> {
     data.as_array()

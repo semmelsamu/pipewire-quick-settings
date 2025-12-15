@@ -42,3 +42,4 @@ impl Sink {
         Some(Sink { id, device, port, name, description })
     }
 }
+

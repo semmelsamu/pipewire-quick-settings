@@ -1,7 +1,7 @@
 use serde_json::Value;
 use crate::utils::value_as_u32;
-use crate::interfaces::profile::EnumProfile;
-use crate::interfaces::route::EnumRoute;
+use crate::models::profile::EnumProfile;
+use crate::models::route::EnumRoute;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Device {
