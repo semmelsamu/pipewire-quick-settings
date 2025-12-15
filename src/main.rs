@@ -8,9 +8,13 @@ mod models;
 use utils::{prompt, heading};
 use pipewire::{pw_dump, wpctl_set_default};
 use parsers::{default_sink, audio_sinks, devices};
+use crate::models::state::PipeWireState;
 
 fn main() {
     heading("PipeWire Quick Settings");
+    
+    let data = pw_dump();
+    let state = PipeWireState::new(&data);
     
     loop {
         heading("Options");
