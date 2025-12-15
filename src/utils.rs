@@ -14,6 +14,12 @@ pub fn prompt(question: &str) -> String {
     input
 }
 
+pub fn heading(text: &str) {
+    println!();
+    println!("{}", text);
+    println!("{}", "=".repeat(text.len()));
+}
+
 pub fn value_as_u32(value: &Value) -> Option<u32> {
     match value {
         Value::Number(n) => n.as_u64().and_then(|n| u32::try_from(n).ok()),

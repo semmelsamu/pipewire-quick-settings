@@ -2,20 +2,21 @@ mod utils;
 mod pipewire;
 mod parsers;
 mod types;
+mod printers;
 
-use utils::prompt;
+use utils::{prompt, heading};
 use pipewire::{pw_dump, wpctl_set_default};
 use parsers::{default_sink, audio_sinks, devices};
 
 fn main() {
-    println!("PipeWire Quick Settings");
+    heading("PipeWire Quick Settings");
     
     loop {
-        println!();
+        heading("Options");
         println!("- 0 Exit");
         println!("- 1 Show default sink");
         println!("- 2 Set default sink");
-        println!("- 3 Show devices");
+        println!("- 3 Show devices and profiles");
         
         let input = prompt("What do you want to do?");
 
@@ -24,19 +25,22 @@ fn main() {
             "1" => {
                 let data = pw_dump();
                 match default_sink(&data) {
-                    Some(sink) => println!("Default sink: {}", sink.description),
-                    None => println!("Default sink not found"),
+                    Some(sink) => heading(&format!("Default sink: {}", sink.description)),
+                    None => heading("Default sink not found"),
                 }
             }
             "2" => {
                 let data = pw_dump();
                 let sinks = audio_sinks(&data);
+                
+                heading("Available sinks");
 
                 for s in &sinks {
                     println!("- {} {}", s.id, s.description);
                 }
 
                 let input = prompt("Choose sink id");
+                
                 match input.trim().parse::<u32>() {
                     Ok(sink_id) => {
                         wpctl_set_default(sink_id);
@@ -49,15 +53,7 @@ fn main() {
                 let data = pw_dump();
                 let devices = devices(&data);
                 for d in &devices {
-                    println!("- {} {}", d.id, d.name);
-                    println!("  Profiles:");
-                    for (i, p) in d.profiles.iter().enumerate().filter(|(_, p)| p.available != "no") {
-                        println!("  - {} {}", i, p.description);
-                    }
-                    println!("  Routes:");
-                    for (i, r) in d.routes.iter().enumerate().filter(|(_, r)| r.available != "no") {
-                        println!("  - {} {}", i, r.description);
-                    }
+                    printers::device(d);
                 }
             }
             _ => println!("Invalid option"),
