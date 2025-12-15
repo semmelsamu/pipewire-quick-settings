@@ -13,6 +13,19 @@ pub struct Sink {
 impl Sink {
     /// Create a new Sink from a JSON object
     pub fn new(data: &Value) -> Option<Self> {
+        let is_sink = data.get("type").and_then(Value::as_str)
+            == Some("PipeWire:Interface:Node")
+            && data
+                .get("info")
+                .and_then(|i| i.get("props"))
+                .and_then(|p| p.get("media.class"))
+                .and_then(Value::as_str)
+                == Some("Audio/Sink");
+
+        if !is_sink {
+            return None;
+        }
+
         let id = data.get("id").and_then(value_as_u32)?;
         let props = data.get("info")?.get("props")?;
         let device = props.get("device.id").and_then(value_as_u32)?;

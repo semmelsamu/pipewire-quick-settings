@@ -93,22 +93,7 @@ pub fn audio_sinks(data: &Value) -> Vec<Sink> {
     data.as_array()
         .into_iter()
         .flatten()
-        .filter_map(|obj| {
-            let is_sink = obj.get("type").and_then(Value::as_str)
-                == Some("PipeWire:Interface:Node")
-                && obj
-                    .get("info")
-                    .and_then(|i| i.get("props"))
-                    .and_then(|p| p.get("media.class"))
-                    .and_then(Value::as_str)
-                    == Some("Audio/Sink");
-
-            if !is_sink {
-                return None;
-            }
-
-            Sink::new(obj)
-        })
+        .filter_map(|obj| Sink::new(obj))
         .collect()
 }
 
