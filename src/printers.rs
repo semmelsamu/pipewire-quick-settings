@@ -5,15 +5,17 @@ pub fn device(device: &Device) {
     heading(&format!("{} ({})", device.name, device.id));
     
     println!("Profiles:");
-    for (i, p) in device.profiles.iter().enumerate().filter(|(_, p)| p.available != "no") {
-        print!("- {} {}", i, p.description);
-        if i == device.current_profile as usize {
-            print!(" (current)");
+    for (_i, p) in device.profiles.iter().enumerate().filter(|(_, p)| p.available != "no") {
+        if p.index == device.current_profile {
+            print!("* ");
+        } else {
+            print!("  ");
         }
-        println!();
+        
+        println!("{} {}", p.index, p.description);
     }
     println!("Routes:");
     for (i, r) in device.routes.iter().enumerate().filter(|(_, r)| r.available != "no") {
-        println!("- {} {}", i, r.description);
+        println!("  {} {}", i, r.description);
     }
 }

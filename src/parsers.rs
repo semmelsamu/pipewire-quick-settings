@@ -59,6 +59,7 @@ fn enum_profiles(data: &Value) -> Vec<EnumProfile> {
         .flatten()
         .filter_map(|obj| {
             Some(EnumProfile { 
+                index: obj.get("index").and_then(|idx| idx.as_u64().map(|x| x as u32))?,
                 name: obj.get("name").and_then(Value::as_str)?.to_owned(), 
                 description: obj.get("description").and_then(Value::as_str)?.to_owned(), 
                 priority: obj.get("priority").and_then(value_as_u32)?, 

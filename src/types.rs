@@ -9,6 +9,7 @@ pub struct Device {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EnumProfile {
+    pub index: u32,
     pub name: String,
     pub description: String,
     pub priority: u32,
