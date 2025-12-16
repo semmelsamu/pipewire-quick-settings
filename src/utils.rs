@@ -2,6 +2,7 @@ use serde_json::Value;
 use std::io::{self, Write};
 
 pub fn prompt(question: &str) -> String {
+    println!();
     print!("{} > ", question);
     io::stdout().flush().unwrap();
     
