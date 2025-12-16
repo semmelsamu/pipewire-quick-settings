@@ -2,22 +2,27 @@ use crate::utils::{heading, prompt};
 use crate::models::state::PipeWireState;
 use crate::pipewire::{pw_dump, wpctl_set_default};
 use crate::printers;
+use colored::*;
 
 pub fn cli_loop() {
     heading("PipeWire Quick Settings");
     print_options();
 
     loop {
-
+        println!();
         let input = prompt("What do you want to do?");
-
+        println!();
+        
         let data = pw_dump();
         let state = PipeWireState::new(&data);
 
         match input.trim().to_lowercase().as_str() {
-            "q" => break,
+            "q" => {
+                println!("{}", "Bye bye.".green().bold());
+                break;
+            },
             "s" => {
-                heading("Available sinks");
+                println!("{}", "Available sinks".green().bold());
 
                 for s in &state.sinks {
                     if state.is_default_sink(s) {
@@ -36,29 +41,31 @@ pub fn cli_loop() {
                 }
             }
             "c" => {
+                println!("{}", "Available devices".green().bold());
+                
                 for d in &state.devices {
                     printers::device(d);
                 }
             }
             "d" => {
+                println!("{}", "Set default sink".green().bold());
+                
                 let input = prompt("Choose sink id");
 
                 match input.trim().parse::<u32>() {
                     Ok(sink_id) => {
+                        println!("{}", format!("Setting default sink to {}", sink_id).magenta().bold());
                         wpctl_set_default(sink_id);
-                        println!("Set default sink to {}", sink_id);
                     }
-                    Err(_) => println!("Invalid sink id"),
+                    Err(_) => println!("{}", "Invalid sink id".red().bold()),
                 }
             }
             _ => {
-                println!("Invalid option");
+                println!("{}", format!("Invalid option: {}", input).red().bold());
                 print_options();
             }
         }
     }
-
-    println!("Bye bye.");
 }
 
 fn print_options() {

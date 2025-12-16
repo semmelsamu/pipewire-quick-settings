@@ -1,9 +1,9 @@
 use serde_json::Value;
 use std::io::{self, Write};
+use colored::*;
 
 pub fn prompt(question: &str) -> String {
-    println!();
-    print!("{} > ", question);
+    print!("{} > ", question.blue().bold());
     io::stdout().flush().unwrap();
     
     let mut input = String::new();
@@ -17,8 +17,8 @@ pub fn prompt(question: &str) -> String {
 
 pub fn heading(text: &str) {
     println!();
-    println!("{}", text);
-    println!("{}", "=".repeat(text.len()));
+    println!("{}", text.bold());
+    println!("{}", "=".repeat(text.len()).bold());
 }
 
 pub fn value_as_u32(value: &Value) -> Option<u32> {
