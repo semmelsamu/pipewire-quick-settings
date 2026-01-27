@@ -1,6 +1,6 @@
-use crate::utils::{heading, prompt};
+use crate::utils::{heading, prompt, prompt_u32};
 use crate::models::state::PipeWireState;
-use crate::pipewire::{pw_dump, wpctl_set_default};
+use crate::pipewire::{pw_dump, wpctl_set_default, wpctl_set_volume};
 use crate::printers;
 use colored::*;
 
@@ -50,15 +50,22 @@ pub fn cli_loop() {
             "d" => {
                 println!("{}", "Set default sink".green().bold());
                 
-                let input = prompt("Choose sink id");
+                let input = prompt_u32("Choose sink id");
 
-                match input.trim().parse::<u32>() {
-                    Ok(sink_id) => {
-                        println!("{}", format!("Setting default sink to {}", sink_id).magenta().bold());
-                        wpctl_set_default(sink_id);
-                    }
-                    Err(_) => println!("{}", "Invalid sink id".red().bold()),
-                }
+                println!("{}", format!("Setting default sink to {}", input).magenta().bold());
+                
+                wpctl_set_default(input);
+            }
+            "v" => {
+                println!("{}", "Set volume for a sink".green().bold());
+
+                let input = prompt_u32("Choose sink id");
+
+                let volume = prompt_u32("Choose volume (in %)");
+                
+                println!("{}", format!("Setting volume for {} to {}", input, volume).magenta().bold());
+
+                wpctl_set_volume(input, volume);
             }
             _ => {
                 println!("{}", format!("Invalid option: {}", input).red().bold());

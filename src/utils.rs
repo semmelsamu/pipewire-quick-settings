@@ -15,6 +15,11 @@ pub fn prompt(question: &str) -> String {
     input
 }
 
+pub fn prompt_u32(question: &str) -> u32 {
+    let input = prompt(question);
+    input.trim().parse::<u32>().expect("Invalid input")
+}
+
 pub fn heading(text: &str) {
     println!();
     println!("{}", text.bold());
