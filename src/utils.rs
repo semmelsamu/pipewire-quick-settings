@@ -54,6 +54,6 @@ pub fn prompt_sink(state: &PipeWireState) -> Sink {
             .clone();
     }
 
-    println!("Chose sink {}", sink.id);
+    println!("Chose sink {} ({})", sink.id, sink.description);
     sink
 }
