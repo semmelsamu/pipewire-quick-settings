@@ -50,6 +50,8 @@ pub fn cli_loop() {
                 println!("{}", "Set volume for a sink".green().bold());
 
                 let sink = prompt_sink(&state, true);
+                
+                println!("Current volume: {}%", sink.volume);
 
                 let volume = prompt_u32("Choose volume (in %)");
 
@@ -66,6 +68,8 @@ pub fn cli_loop() {
                 println!("{}", "Set mute for a sink".green().bold());
 
                 let sink = prompt_sink(&state, true);
+                
+                println!("Current state: {}", if sink.muted { "Muted" } else { "Unmuted" });
 
                 let mute = prompt("Choose mute (y/n, leave empty for toggle)");
 
