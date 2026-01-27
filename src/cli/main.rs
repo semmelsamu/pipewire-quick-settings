@@ -25,12 +25,9 @@ pub fn cli_loop() {
                 break;
             }
             "s" => {
-                println!("{}", "Available sinks".green().bold());
                 printers::sinks(&state);
             }
             "c" => {
-                println!("{}", "Available devices".green().bold());
-
                 for d in &state.devices {
                     printers::device(d);
                 }

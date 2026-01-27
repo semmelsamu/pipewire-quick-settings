@@ -32,6 +32,7 @@ pub fn device(device: &Device) {
 }
 
 pub fn sinks(state: &PipeWireState) {
+    println!("Available sinks");
     for s in &state.sinks {
         if state.is_default_sink(s) {
             print!("* ");
