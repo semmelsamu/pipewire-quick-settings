@@ -75,3 +75,12 @@ pub fn wpctl_set_volume(sink_id: u32, volume: u32) {
         .output()
         .expect("Error setting volume");
 }
+
+pub fn wpctl_set_mute(sink_id: u32, mute: bool) {
+    Command::new("wpctl")
+        .arg("set-mute")
+        .arg(sink_id.to_string())
+        .arg(if mute { "1" } else { "0" })
+        .output()
+        .expect("Error setting mute");
+}

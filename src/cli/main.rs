@@ -1,5 +1,5 @@
 use crate::models::state::PipeWireState;
-use crate::pipewire::{pw_dump, wpctl_set_default, wpctl_set_volume};
+use crate::pipewire::{pw_dump, wpctl_set_default, wpctl_set_mute, wpctl_set_volume};
 use crate::printers;
 use crate::utils::{heading, prompt, prompt_sink, prompt_u32};
 use colored::*;
@@ -76,6 +76,34 @@ pub fn cli_loop() {
                 );
 
                 wpctl_set_volume(sink.id, volume);
+            }
+            "m" => {
+                println!("{}", "Set mute for a sink".green().bold());
+
+                let sink = prompt_sink(&state);
+
+                let mute = prompt("Choose mute (y/n, leave empty for toggle)");
+                
+                let mute_bool;
+                
+                if mute.trim().is_empty() {
+                    mute_bool = !sink.muted;
+                } else if mute.trim().to_lowercase() == "y" {
+                    mute_bool = true;
+                } else if mute.trim().to_lowercase() == "n" {
+                    mute_bool = false;
+                } else {
+                    panic!("Invalid option: {}", mute);
+                }
+                
+                println!(
+                    "{}",
+                    format!("Setting mute for {} to {}", sink.id, mute_bool)
+                        .magenta()
+                        .bold()
+                );
+
+                wpctl_set_mute(sink.id, mute_bool);
             }
             _ => {
                 println!("{}", format!("Invalid option: {}", input).red().bold());
