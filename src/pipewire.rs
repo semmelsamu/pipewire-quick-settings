@@ -66,3 +66,12 @@ pub fn wpctl_get_mute(sink_id: u32) -> Option<bool> {
     // Check if output contains "[MUTED]"
     Some(stdout.contains("[MUTED]"))
 }
+
+pub fn wpctl_set_volume(sink_id: u32, volume: u32) {
+    Command::new("wpctl")
+        .arg("set-volume")
+        .arg(sink_id.to_string())
+        .arg(volume.to_string() + "%")
+        .output()
+        .expect("Error setting volume");
+}
