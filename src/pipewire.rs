@@ -95,3 +95,12 @@ pub fn wpctl_set_route(sink_id: u32, route: u32) {
         .output()
         .expect("Error setting route");
 }
+
+pub fn wpctl_set_profile(device_id: u32, profile: u32) {
+    Command::new("wpctl")
+        .arg("set-profile")
+        .arg(device_id.to_string())
+        .arg(profile.to_string())
+        .output()
+        .expect("Error setting profile");
+}

@@ -1,5 +1,8 @@
 use crate::models::state::PipeWireState;
-use crate::pipewire::{pw_dump, wpctl_set_default, wpctl_set_mute, wpctl_set_route, wpctl_set_volume};
+use crate::pipewire::{
+    pw_dump, wpctl_set_default, wpctl_set_mute, wpctl_set_profile, wpctl_set_route,
+    wpctl_set_volume,
+};
 use crate::printers;
 use crate::utils::{heading, prompt, prompt_sink, prompt_u32};
 use colored::*;
@@ -111,7 +114,7 @@ pub fn cli_loop() {
                 let sink = prompt_sink(&state);
 
                 let route = prompt_u32("Choose route (0 is off)");
-                
+
                 println!(
                     "{}",
                     format!("Setting route for {} to {}", sink.id, route)
@@ -120,6 +123,22 @@ pub fn cli_loop() {
                 );
 
                 wpctl_set_route(sink.id, route);
+            }
+            "p" => {
+                println!("{}", "Set profile for a device".green().bold());
+
+                let device = prompt_u32("Choose device id");
+
+                let profile = prompt_u32("Choose profile");
+
+                println!(
+                    "{}",
+                    format!("Setting profile for {} to {}", device, profile)
+                        .magenta()
+                        .bold()
+                );
+
+                wpctl_set_profile(device, profile);
             }
             _ => {
                 println!("{}", format!("Invalid option: {}", input).red().bold());
