@@ -112,19 +112,25 @@ pub fn cli_loop() {
             }
             "p" => {
                 println!("{}", "Set profile for a device".green().bold());
+                
+                printers::devices(&state);
 
-                let device = prompt_u32("Choose device id");
+                let device_id = prompt_u32("Choose device id");
+                
+                let device = state.devices.iter().find(|d| d.id == device_id).expect("Device not found");
+                
+                printers::device(device);
 
                 let profile = prompt_u32("Choose profile");
 
                 println!(
                     "{}",
-                    format!("Setting profile for {} to {}", device, profile)
+                    format!("Setting profile for {} to {}", device.id, profile)
                         .magenta()
                         .bold()
                 );
 
-                wpctl_set_profile(device, profile);
+                wpctl_set_profile(device.id, profile);
             }
             _ => {
                 println!("{}", format!("Invalid option: {}", input).red().bold());

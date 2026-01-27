@@ -49,3 +49,10 @@ pub fn sinks(state: &PipeWireState) {
         );
     }
 }
+
+pub fn devices(state: &PipeWireState) {
+    println!("Available devices");
+    for d in &state.devices {
+        println!("  {}\t{}", d.id, d.name);
+    }
+}
