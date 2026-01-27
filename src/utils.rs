@@ -36,24 +36,34 @@ pub fn value_as_u32(value: &Value) -> Option<u32> {
     }
 }
 
-pub fn prompt_sink(state: &PipeWireState) -> Sink {
-    let input = prompt("Choose a sink (leave empty for default)");
-
-    let sink: Sink;
-
-    if input.trim().is_empty() {
-        println!("Chosing default sink");
-        sink = state.default_sink.clone().unwrap();
+pub fn prompt_sink(state: &PipeWireState, allow_default: bool) -> Sink {
+    for sink in &state.sinks {
+        println!("{}\t{}", sink.id, sink.description);
+    }
+    
+    let sink_id: u32;
+    
+    if allow_default {
+        let input = prompt("Choose a sink (leave empty for default)");
+        
+        if input.trim().is_empty() {
+            println!("Chosing default sink");
+            sink_id = state.default_sink.clone().unwrap().id;
+        }
+        else {
+            sink_id = input.trim().parse::<u32>().expect("Invalid sink id");
+        }
     } else {
-        let sink_id = input.trim().parse::<u32>().expect("Invalid sink id");
-        sink = state
-            .sinks
-            .iter()
-            .find(|s| s.id == sink_id)
-            .expect("Sink not found")
-            .clone();
+        sink_id = prompt_u32("Choose a sink");
     }
 
+    let sink = state
+        .sinks
+        .iter()
+        .find(|s| s.id == sink_id)
+        .expect("Sink not found")
+        .clone();
+    
     println!("Chose sink {} ({})", sink.id, sink.description);
     sink
 }

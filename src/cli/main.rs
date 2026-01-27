@@ -53,21 +53,21 @@ pub fn cli_loop() {
             "d" => {
                 println!("{}", "Set default sink".green().bold());
 
-                let input = prompt_u32("Choose sink id");
+                let sink = prompt_sink(&state, false);
 
                 println!(
                     "{}",
-                    format!("Setting default sink to {}", input)
+                    format!("Setting default sink to {}", sink.id)
                         .magenta()
                         .bold()
                 );
 
-                wpctl_set_default(input);
+                wpctl_set_default(sink.id);
             }
             "v" => {
                 println!("{}", "Set volume for a sink".green().bold());
 
-                let sink = prompt_sink(&state);
+                let sink = prompt_sink(&state, true);
 
                 let volume = prompt_u32("Choose volume (in %)");
 
@@ -83,7 +83,7 @@ pub fn cli_loop() {
             "m" => {
                 println!("{}", "Set mute for a sink".green().bold());
 
-                let sink = prompt_sink(&state);
+                let sink = prompt_sink(&state, true);
 
                 let mute = prompt("Choose mute (y/n, leave empty for toggle)");
 
@@ -111,7 +111,7 @@ pub fn cli_loop() {
             "r" => {
                 println!("{}", "Set route for a sink".green().bold());
 
-                let sink = prompt_sink(&state);
+                let sink = prompt_sink(&state, true);
 
                 let route = prompt_u32("Choose route (0 is off)");
 
