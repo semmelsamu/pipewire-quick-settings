@@ -72,6 +72,8 @@ pub fn wpctl_set_volume(sink_id: u32, volume: u32) {
         .arg("set-volume")
         .arg(sink_id.to_string())
         .arg(volume.to_string() + "%")
+        .arg("-l")
+        .arg("1.2") // Limit to 120% (your ears will thank me later)
         .output()
         .expect("Error setting volume");
 }
@@ -83,4 +85,13 @@ pub fn wpctl_set_mute(sink_id: u32, mute: bool) {
         .arg(if mute { "1" } else { "0" })
         .output()
         .expect("Error setting mute");
+}
+
+pub fn wpctl_set_route(sink_id: u32, route: u32) {
+    Command::new("wpctl")
+        .arg("set-route")
+        .arg(sink_id.to_string())
+        .arg(route.to_string())
+        .output()
+        .expect("Error setting route");
 }
