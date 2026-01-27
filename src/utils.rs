@@ -1,17 +1,17 @@
+use colored::*;
 use serde_json::Value;
 use std::io::{self, Write};
-use colored::*;
 
 pub fn prompt(question: &str) -> String {
     print!("{} > ", question.blue().bold());
     io::stdout().flush().unwrap();
-    
+
     let mut input = String::new();
-    
+
     io::stdin()
         .read_line(&mut input)
         .expect("Failed to read line");
-        
+
     input
 }
 

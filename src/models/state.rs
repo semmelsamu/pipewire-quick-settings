@@ -1,33 +1,26 @@
-use serde_json::Value;
 use crate::models::device::Device;
 use crate::models::sink::Sink;
+use serde_json::Value;
 
 pub fn default_sink_name(dump: &Value) -> Option<String> {
-    dump
-        .as_array()?
+    dump.as_array()?
         .iter()
         .find(|obj| {
-            obj.get("type").and_then(Value::as_str)
-                == Some("PipeWire:Interface:Metadata")
-                &&
-            obj.get("props")
-                .and_then(|p| p.get("metadata.name"))
-                .and_then(Value::as_str)
-                == Some("default")
+            obj.get("type").and_then(Value::as_str) == Some("PipeWire:Interface:Metadata")
+                && obj
+                    .get("props")
+                    .and_then(|p| p.get("metadata.name"))
+                    .and_then(Value::as_str)
+                    == Some("default")
         })?
         .get("metadata")?
         .as_array()?
         .iter()
-        .find(|item| {
-            item.get("key").and_then(Value::as_str)
-                == Some("default.audio.sink")
-        })
+        .find(|item| item.get("key").and_then(Value::as_str) == Some("default.audio.sink"))
         .and_then(|item| {
             let value = item.get("value")?;
             match value {
-                Value::Object(map) => {
-                    map.get("name")?.as_str().map(String::from)
-                }
+                Value::Object(map) => map.get("name")?.as_str().map(String::from),
                 Value::String(s) => Some(s.clone()),
                 _ => None,
             }
@@ -43,34 +36,32 @@ pub struct PipeWireState {
 
 impl PipeWireState {
     pub fn new(data: &Value) -> Self {
-        let sinks: Vec<Sink> = data.as_array()
+        let sinks: Vec<Sink> = data
+            .as_array()
             .into_iter()
             .flatten()
             .filter_map(|obj| Sink::new(obj))
             .collect();
-        
+
         let default_sink_name = default_sink_name(data);
-        
-        let default_sink = default_sink_name
-            .and_then(|name| {
-                sinks.iter()
-                    .find(|s| s.name == name)
-                    .cloned()
-            });
-            
-        let devices: Vec<Device> = data.as_array()
+
+        let default_sink =
+            default_sink_name.and_then(|name| sinks.iter().find(|s| s.name == name).cloned());
+
+        let devices: Vec<Device> = data
+            .as_array()
             .into_iter()
             .flatten()
             .filter_map(|obj| Device::new(obj))
             .collect();
-        
+
         PipeWireState {
             devices,
             sinks,
             default_sink,
         }
     }
-    
+
     pub fn is_default_sink(&self, sink: &Sink) -> bool {
         self.default_sink.as_ref() == Some(sink)
     }

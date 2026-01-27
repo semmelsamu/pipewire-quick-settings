@@ -1,6 +1,5 @@
-pub mod sink;
+pub mod device;
 pub mod profile;
 pub mod route;
-pub mod device;
+pub mod sink;
 pub mod state;
-
