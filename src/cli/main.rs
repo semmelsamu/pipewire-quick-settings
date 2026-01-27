@@ -1,7 +1,7 @@
-use crate::utils::{heading, prompt, prompt_u32};
 use crate::models::state::PipeWireState;
 use crate::pipewire::{pw_dump, wpctl_set_default, wpctl_set_volume};
 use crate::printers;
+use crate::utils::{heading, prompt, prompt_sink, prompt_u32};
 use colored::*;
 
 pub fn cli_loop() {
@@ -12,7 +12,7 @@ pub fn cli_loop() {
         println!();
         let input = prompt("What do you want to do?");
         println!();
-        
+
         let data = pw_dump();
         let state = PipeWireState::new(&data);
 
@@ -20,7 +20,7 @@ pub fn cli_loop() {
             "q" => {
                 println!("{}", "Bye bye.".green().bold());
                 break;
-            },
+            }
             "s" => {
                 println!("{}", "Available sinks".green().bold());
 
@@ -42,30 +42,40 @@ pub fn cli_loop() {
             }
             "c" => {
                 println!("{}", "Available devices".green().bold());
-                
+
                 for d in &state.devices {
                     printers::device(d);
                 }
             }
             "d" => {
                 println!("{}", "Set default sink".green().bold());
-                
+
                 let input = prompt_u32("Choose sink id");
 
-                println!("{}", format!("Setting default sink to {}", input).magenta().bold());
-                
+                println!(
+                    "{}",
+                    format!("Setting default sink to {}", input)
+                        .magenta()
+                        .bold()
+                );
+
                 wpctl_set_default(input);
             }
             "v" => {
                 println!("{}", "Set volume for a sink".green().bold());
 
-                let input = prompt_u32("Choose sink id");
+                let sink = prompt_sink(&state);
 
                 let volume = prompt_u32("Choose volume (in %)");
-                
-                println!("{}", format!("Setting volume for {} to {}", input, volume).magenta().bold());
 
-                wpctl_set_volume(input, volume);
+                println!(
+                    "{}",
+                    format!("Setting volume for {} to {}", sink.id, volume)
+                        .magenta()
+                        .bold()
+                );
+
+                wpctl_set_volume(sink.id, volume);
             }
             _ => {
                 println!("{}", format!("Invalid option: {}", input).red().bold());
