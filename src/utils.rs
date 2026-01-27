@@ -1,5 +1,6 @@
 use crate::models::sink::Sink;
 use crate::models::state::PipeWireState;
+use crate::printers;
 use colored::*;
 use serde_json::Value;
 use std::io::{self, Write};
@@ -37,20 +38,17 @@ pub fn value_as_u32(value: &Value) -> Option<u32> {
 }
 
 pub fn prompt_sink(state: &PipeWireState, allow_default: bool) -> Sink {
-    for sink in &state.sinks {
-        println!("{}\t{}", sink.id, sink.description);
-    }
-    
+    printers::sinks(state);
+
     let sink_id: u32;
-    
+
     if allow_default {
         let input = prompt("Choose a sink (leave empty for default)");
-        
+
         if input.trim().is_empty() {
             println!("Chosing default sink");
             sink_id = state.default_sink.clone().unwrap().id;
-        }
-        else {
+        } else {
             sink_id = input.trim().parse::<u32>().expect("Invalid sink id");
         }
     } else {
@@ -63,7 +61,7 @@ pub fn prompt_sink(state: &PipeWireState, allow_default: bool) -> Sink {
         .find(|s| s.id == sink_id)
         .expect("Sink not found")
         .clone();
-    
+
     println!("Chose sink {} ({})", sink.id, sink.description);
     sink
 }

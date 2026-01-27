@@ -1,4 +1,5 @@
 use crate::models::device::Device;
+use crate::models::state::PipeWireState;
 use crate::utils::heading;
 
 pub fn device(device: &Device) {
@@ -27,5 +28,23 @@ pub fn device(device: &Device) {
         .filter(|(_, r)| r.available != "no")
     {
         println!("  {} {}", r.index, r.description);
+    }
+}
+
+pub fn sinks(state: &PipeWireState) {
+    for s in &state.sinks {
+        if state.is_default_sink(s) {
+            print!("* ");
+        } else {
+            print!("  ");
+        }
+
+        println!(
+            "{}\t{} ({}%) {}",
+            s.id,
+            s.description,
+            s.volume,
+            if s.muted { "Muted" } else { "" }
+        );
     }
 }

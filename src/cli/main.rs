@@ -26,22 +26,7 @@ pub fn cli_loop() {
             }
             "s" => {
                 println!("{}", "Available sinks".green().bold());
-
-                for s in &state.sinks {
-                    if state.is_default_sink(s) {
-                        print!("* ");
-                    } else {
-                        print!("  ");
-                    }
-
-                    println!(
-                        "{} {} ({}%) {}",
-                        s.id,
-                        s.description,
-                        s.volume,
-                        if s.muted { "Muted" } else { "" }
-                    );
-                }
+                printers::sinks(&state);
             }
             "c" => {
                 println!("{}", "Available devices".green().bold());
